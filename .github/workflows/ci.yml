@@ -2,13 +2,15 @@ name: Progress service CI
 
 on:
   push:
-  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Intentionally fail
+        run: exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
 
