@@ -28,20 +28,20 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PerformedExercise {
-  @Id
+  @Id //TODO: migrate to UUID
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long peid;
 
   @Column(nullable = false)
   private int position;
 
-  @ManyToOne
+  @ManyToOne //TODO: add optional = false
   private Session session;
 
   @Column(nullable = false)
   private String uid;
 
-  @ManyToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.EAGER) //TODO: add optional = false
   private Exercise exercise;
 
   @OneToMany(mappedBy = "performedExercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

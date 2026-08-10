@@ -16,11 +16,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Exercise {
-  @Id
+  @Id  //TODO: migrate to UUID
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long eid;
 
-  @Column(nullable = false)
+  @Column(nullable = false)  //TODO: add max length 50
   private String name;
   @Column(nullable = false)
   private String uid;
