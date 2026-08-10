@@ -25,13 +25,13 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Session {
-  @Id
+  @Id //TODO: migrate to UUID
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long ssid;
 
   @Column(nullable = false)
   private LocalDate date;
-  @Column(nullable = false)
+  @Column(nullable = false) //TODO: add max length 50
   private String name;
   @Column(nullable = false)
   private String uid;

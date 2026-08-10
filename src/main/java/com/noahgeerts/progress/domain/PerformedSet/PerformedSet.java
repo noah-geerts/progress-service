@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PerformedSet {
-  @Id
+  @Id //TODO: migrate to UUID
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long stid;
 

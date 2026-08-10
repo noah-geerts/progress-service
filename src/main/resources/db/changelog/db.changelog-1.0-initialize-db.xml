@@ -1,0 +1,76 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="noahg (generated)" id="1786334259462-1">
+        <createTable tableName="exercise">
+            <column autoIncrement="true" name="eid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="exercise_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-2">
+        <createTable tableName="performed_exercise">
+            <column autoIncrement="true" name="peid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="performed_exercise_pkey"/>
+            </column>
+            <column name="position" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exercise_eid" type="BIGINT"/>
+            <column name="session_ssid" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-3">
+        <createTable tableName="performed_set">
+            <column autoIncrement="true" name="stid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="performed_set_pkey"/>
+            </column>
+            <column name="position" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reps" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight" type="FLOAT8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="performed_exercise_peid" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-4">
+        <createTable tableName="session">
+            <column autoIncrement="true" name="ssid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="session_pkey"/>
+            </column>
+            <column name="date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-5">
+        <addForeignKeyConstraint baseColumnNames="session_ssid" baseTableName="performed_exercise" constraintName="fkambwfh3ioqcru0k1ritrjsidn" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="ssid" referencedTableName="session" validate="true"/>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-6">
+        <addForeignKeyConstraint baseColumnNames="performed_exercise_peid" baseTableName="performed_set" constraintName="fkil6bhdx09wplo08wkinuaq9l0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="peid" referencedTableName="performed_exercise" validate="true"/>
+    </changeSet>
+    <changeSet author="noahg (generated)" id="1786334259462-7">
+        <addForeignKeyConstraint baseColumnNames="exercise_eid" baseTableName="performed_exercise" constraintName="fkjwryb1uutja4r5phsnfg5e3fl" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="eid" referencedTableName="exercise" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
