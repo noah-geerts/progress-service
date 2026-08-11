@@ -229,20 +229,20 @@ public class PerformedSetControllerIntegrationTests {
 
                 @ParameterizedTest
                 @ValueSource(strings = {
-                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1, \"weight\": \"shouldn't be a string\"}", // weight
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1, \"reps\": 1, \"weight\": \"shouldn't be a string\"}", // weight
                                                                                                                       // wrong
                                 // datatype
-                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": \"string\", \"weight\": 225.0}", // reps wrong
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1, \"reps\": \"string\", \"weight\": 225.0}", // reps wrong
                                                                                                            // datatype
-                                "{\"performedExerciseId\": 1, \"position\": \"hi\", \"reps\": 1, \"weight\": 225.0}", // position wrong
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": \"hi\", \"reps\": 1, \"weight\": 225.0}", // position wrong
                                                                                                        // datatype
                                 "{\"performedExerciseId\": \"hi\", \"position\": 1, \"reps\": 1, \"weight\": 225.0}", // performed exercise id wrong
                                                                                                        // datatype
-                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1}", // missing weight
-                                "{\"performedExerciseId\": 1, \"position\": 1, \"weight\": 225.0}", // missing reps
-                                "{\"performedExerciseId\": 1, \"reps\": 1, \"weight\": 225.0}", // missing position
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1, \"reps\": 1}", // missing weight
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1, \"weight\": 225.0}", // missing reps
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"reps\": 1, \"weight\": 225.0}", // missing position
                                 "{\"position\": 1, \"reps\": 1, \"weight\": 225.0}", // missing performed exercise id
-                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1, \"weight\": 225.0, \"extra\": 0}" // extra
+                                "{\"performedExerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1, \"reps\": 1, \"weight\": 225.0, \"extra\": 0}" // extra
                                                                                                                // field
                 })
                 void shouldReturnBadRequest_whenRequestBodyDoesNotMatchDto(String requestBody) throws Exception {

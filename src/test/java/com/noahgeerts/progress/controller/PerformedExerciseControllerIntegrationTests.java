@@ -217,11 +217,11 @@ public class PerformedExerciseControllerIntegrationTests {
                 @ParameterizedTest
                 @ValueSource(strings = {
                                 "{}", // missing all fields
-                                "{\"exerciseId\": \"100\", \"sessionId\": 123, \"position\": 1}", // exercise id as string instead of UUID
-                                "{\"exerciseId\": 100, \"sessionId\": 123, \"position\": 1, \"extraField\": 0}", // extra field
-                                "{\"sessionId\": 123, \"position\": 1}", // missing exercise id
-                                "{\"exerciseId\": 123, \"position\": 1}", // missing session id
-                                "{\"sessionId\": 123, \"exerciseId\": 1}" // missing position
+                                "{\"exerciseId\": \"100\", \"sessionId\": \"00000000-0000-0000-0000-000000000002\", \"position\": 1}", // exercise id as string instead of UUID
+                                "{\"exerciseId\": \"00000000-0000-0000-0000-000000000001\", \"sessionId\": \"00000000-0000-0000-0000-000000000002\", \"position\": 1, \"extraField\": 0}", // extra field
+                                "{\"sessionId\": \"00000000-0000-0000-0000-000000000002\", \"position\": 1}", // missing exercise id
+                                "{\"exerciseId\": \"00000000-0000-0000-0000-000000000001\", \"position\": 1}", // missing session id
+                                "{\"sessionId\": \"00000000-0000-0000-0000-000000000002\", \"exerciseId\": \"00000000-0000-0000-0000-000000000001\"}" // missing position
                 })
                 void shouldReturnBadRequest_WhenIncomingRequestBodyDoesntMatchDto(String requestBody) throws Exception {
                         mockMvc.perform(
