@@ -48,13 +48,13 @@ public class SessionServiceTests {
     this.underTest = new SessionService(sessionRepo, new ModelMapper());
   }
 
-  private static final UUID TEST_SSID = UUID.fromString("00000000-0000-0000-0000-000000000006");
+  private static final UUID TEST_SESSION_ID = UUID.fromString("00000000-0000-0000-0000-000000000006");
   private static final LocalDate TEST_SESSION_DATE = LocalDate.of(2004, 10, 04);
   private static final String TEST_SESSION_NAME = "Epic Session";
   private static final String TEST_UID = "uid";
 
   private Session createTestSession() {
-    return Session.builder().id(TEST_SSID).date(TEST_SESSION_DATE).name(TEST_SESSION_NAME).uid(TEST_UID).build();
+    return Session.builder().id(TEST_SESSION_ID).date(TEST_SESSION_DATE).name(TEST_SESSION_NAME).uid(TEST_UID).build();
   }
 
   private Session createTestSessionWithUnorderedExercisesAndSets() {
@@ -80,7 +80,7 @@ public class SessionServiceTests {
     List<PerformedExercise> unorderedExercises = Arrays.asList(pe2, pe0, pe1);
 
     return Session.builder()
-        .id(TEST_SSID)
+        .id(TEST_SESSION_ID)
         .date(TEST_SESSION_DATE)
         .name(TEST_SESSION_NAME)
         .uid(TEST_UID)

@@ -43,16 +43,16 @@ public class ExerciseController {
     return ResponseEntity.status(HttpStatus.CREATED).body(newExercise);
   }
 
-  @PatchMapping("/{eid}")
+  @PatchMapping("/{id}")
   public ResponseEntity<ExerciseResponseDto> updateExercise(@AuthenticationPrincipal Jwt jwt,
-      @Validated @RequestBody ExerciseRequestDto dto, @PathVariable UUID eid) {
-    ExerciseResponseDto updatedExercise = exerciseService.updateExercise(jwt.getSubject(), dto, eid);
+      @Validated @RequestBody ExerciseRequestDto dto, @PathVariable UUID id) {
+    ExerciseResponseDto updatedExercise = exerciseService.updateExercise(jwt.getSubject(), dto, id);
     return ResponseEntity.ok(updatedExercise);
   }
 
-  @DeleteMapping("/{eid}")
-  public ResponseEntity<Void> deleteExercise(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID eid) {
-    exerciseService.deleteExercise(jwt.getSubject(), eid);
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteExercise(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+    exerciseService.deleteExercise(jwt.getSubject(), id);
     return ResponseEntity.noContent().build();
   }
 }

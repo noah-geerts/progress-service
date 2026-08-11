@@ -38,7 +38,7 @@ public class PerformedSetService {
    *                                      provided position
    *                                      and performed exercise for the given
    *                                      user
-   * @throws UnprocessableEntityException if the provided peid does not correspond
+  * @throws UnprocessableEntityException if the provided performed exercise id does not correspond
    *                                      to a valid PerformedExercise
    */
   public PerformedSetResponseDto createPerformedSet(String uid, CreatePerformedSetDto dto) {
@@ -46,14 +46,14 @@ public class PerformedSetService {
     Optional<PerformedSet> existing = setRepo.findByPerformedExercise_IdAndPositionAndUid(dto.getPerformedExerciseId(),
         dto.getPosition(), uid);
     if (!existing.isEmpty())
-      throw new ConflictException("PerformedSet already exists with the provided peid and position for this user");
+      throw new ConflictException("PerformedSet already exists with the provided performed exercise id and position for this user");
 
-    // Check if the peid provided corresponds to a valid PerformedExercise owned by
+    // Check if the performed exercise id corresponds to a valid PerformedExercise owned by
     // this user
     Optional<PerformedExercise> existingPe = peRepo.findByIdAndUid(dto.getPerformedExerciseId(), uid);
     if (existingPe.isEmpty())
       throw new UnprocessableEntityException(
-          "Provided peid does not correspond to a valid PerformedExercise for this user");
+          "Provided performed exercise id does not correspond to a valid PerformedExercise for this user");
 
     // Create the new entity
     PerformedSet newSet = PerformedSet.builder().reps(dto.getReps()).weight(dto.getWeight()).position(dto.getPosition())
@@ -68,13 +68,13 @@ public class PerformedSetService {
    * @param dto
    * @return The updated PerformedSet entity
    * @throws ResourceNotFoundException if there is no PerformedSet with the given
-   *                                   stid for the current user
+  *                                   id for the current user
    */
-  public PerformedSetResponseDto updatePerformedSet(String uid, UUID stid, UpdatePerformedSetDto dto) {
+  public PerformedSetResponseDto updatePerformedSet(String uid, UUID id, UpdatePerformedSetDto dto) {
     // Check if it exists
-    Optional<PerformedSet> existing = setRepo.findByIdAndUid(stid, uid);
+    Optional<PerformedSet> existing = setRepo.findByIdAndUid(id, uid);
     if (existing.isEmpty())
-      throw new ResourceNotFoundException("PerformedSet with the given stid does not exist for this user");
+      throw new ResourceNotFoundException("PerformedSet with the given id does not exist for this user");
 
     // Update it
     PerformedSet oldSet = existing.get();
@@ -90,13 +90,13 @@ public class PerformedSetService {
    * @param uid
    * @param dto
    * @throws ResourceNotFoundException if there is no PerformedSet with the given
-   *                                   stid for the current user
+  *                                   id for the current user
    */
-  public void deletePerformedSet(String uid, UUID stid) {
+  public void deletePerformedSet(String uid, UUID id) {
     // Check if it exists
-    Optional<PerformedSet> existing = setRepo.findByIdAndUid(stid, uid);
+    Optional<PerformedSet> existing = setRepo.findByIdAndUid(id, uid);
     if (existing.isEmpty())
-      throw new ResourceNotFoundException("PerformedSet with the given stid does not exist for this user");
+      throw new ResourceNotFoundException("PerformedSet with the given id does not exist for this user");
 
     // Delete it (and remove it from its parent performed exercise)
     PerformedSet set = existing.get();

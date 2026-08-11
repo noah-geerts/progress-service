@@ -36,18 +36,18 @@ public class PerformedExerciseController {
     return ResponseEntity.status(HttpStatus.CREATED).body(result);
   }
 
-  @PatchMapping("/{peid}")
+  @PatchMapping("/{id}")
   public ResponseEntity<PerformedExerciseResponseDto> updatePerformedExercise(@AuthenticationPrincipal Jwt jwt,
-      @PathVariable UUID peid,
+      @PathVariable UUID id,
       @Validated @RequestBody UpdatePerformedExerciseDto dto) {
-    PerformedExerciseResponseDto result = peService.updatePerformedExercise(jwt.getSubject(), peid, dto);
+    PerformedExerciseResponseDto result = peService.updatePerformedExercise(jwt.getSubject(), id, dto);
     return ResponseEntity.ok(result);
   }
 
-  @DeleteMapping("/{peid}")
+  @DeleteMapping("/{id}")
   public ResponseEntity<Void> deletePerformedExercise(@AuthenticationPrincipal Jwt jwt,
-      @PathVariable UUID peid) {
-    peService.deletePerformedExercise(jwt.getSubject(), peid);
+      @PathVariable UUID id) {
+    peService.deletePerformedExercise(jwt.getSubject(), id);
     return ResponseEntity.noContent().build();
   }
 }

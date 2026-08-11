@@ -55,7 +55,7 @@ public class PerformedSetServiceTests {
     }
 
     @Test
-    public void createPerformedSet_InvalidPeid_ThrowsUnprocessable() {
+    public void createPerformedSet_InvalidPerformedExerciseId_ThrowsUnprocessable() {
         // Arrange (find set method returns empty, but peRepo find by id also finds
         // nothing)
         when(setRepo.findByPerformedExercise_IdAndPositionAndUid(TEST_ID, 0, "uid"))
@@ -68,7 +68,7 @@ public class PerformedSetServiceTests {
     }
 
     @Test
-    public void createPerformedSet_ValidPeidDoesntExist_ReturnsNewEntity() {
+    public void createPerformedSet_ValidPerformedExerciseId_ReturnsNewEntity() {
         // Arrange (find set method returns empty and peRepo find by id returns a valid
         // PerformedExercise)
         PerformedExercise exercise = PerformedExercise.builder().build();

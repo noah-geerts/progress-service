@@ -47,22 +47,22 @@ public class PerformedExerciseServiceTests {
 
     private static final String TEST_UID = "test-uid";
 
-    private static final UUID TEST_PEID = UUID.fromString("00000000-0000-0000-0000-000000000003");
+    private static final UUID TEST_PERFORMED_EXERCISE_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
     private static final int TEST_PE_POSITION = 10;
 
-    private static final UUID TEST_SSID = UUID.fromString("00000000-0000-0000-0000-000000000004");
+    private static final UUID TEST_SESSION_ID = UUID.fromString("00000000-0000-0000-0000-000000000004");
     private static final String TEST_SESSION_NAME = "Best Session";
     private static final LocalDate TEST_SESSION_DATE = LocalDate.of(2004, 10, 04);
 
-    private static final UUID TEST_EID = UUID.fromString("00000000-0000-0000-0000-000000000005");
+    private static final UUID TEST_EXERCISE_ID = UUID.fromString("00000000-0000-0000-0000-000000000005");
     private static final String TEST_EXERCISE_NAME = "Test Exercise";
 
     private Session createTestSession() {
-        return Session.builder().id(TEST_SSID).name(TEST_SESSION_NAME).date(TEST_SESSION_DATE).uid(TEST_UID).performedExercises(new ArrayList<>()).build();
+        return Session.builder().id(TEST_SESSION_ID).name(TEST_SESSION_NAME).date(TEST_SESSION_DATE).uid(TEST_UID).performedExercises(new ArrayList<>()).build();
     }
 
     private Exercise createTestExercise() {
-        return Exercise.builder().id(TEST_EID).name(TEST_EXERCISE_NAME).uid(TEST_UID).build();
+        return Exercise.builder().id(TEST_EXERCISE_ID).name(TEST_EXERCISE_NAME).uid(TEST_UID).build();
     }
 
     private PerformedExercise createTestPerformedExercise() {
@@ -75,42 +75,42 @@ public class PerformedExerciseServiceTests {
 
         @Test
         void shouldThrowConflict_whenPEAlreadyExists() {
-            // Arrange (peRepo should return an existing PE for the given ssid, position,
+            // Arrange (peRepo should return an existing performed exercise for the given session id, position,
             // and user)
-            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SSID, TEST_PE_POSITION, TEST_UID))
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
                     .thenReturn(Optional.of(createTestPerformedExercise()));
 
             // Act & Assert
-            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EID).sessionId(TEST_SSID)
+            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).sessionId(TEST_SESSION_ID)
                     .position(TEST_PE_POSITION).build();
             assertThatThrownBy(() -> underTest.createPerformedExercise(TEST_UID, dto)).isInstanceOf(ConflictException.class);
         }
 
         @Test
-        void shouldThrowUnprocessableEntity_WhenSsidIsInvalid() {
+        void shouldThrowUnprocessableEntity_WhenSessionIdIsInvalid() {
             // Arrange (peRepo -> empty, exerciseRepo -> valid, sessionRepo -> invalid)
-            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SSID, TEST_PE_POSITION, TEST_UID))
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
                     .thenReturn(Optional.empty());
-            when(exerciseRepo.findByIdAndUid(TEST_EID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
-            when(sessionRepo.findByIdAndUid(TEST_SSID, TEST_UID)).thenReturn(Optional.empty());
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.empty());
 
             // Act & Assert
-            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EID).sessionId(TEST_SSID)
+            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).sessionId(TEST_SESSION_ID)
                     .position(TEST_PE_POSITION).build();
             assertThatThrownBy(() -> underTest.createPerformedExercise(TEST_UID, dto))
                     .isInstanceOf(UnprocessableEntityException.class);
         }
 
         @Test
-        void shouldThrowUnprocessableEntity_WhenEidIsInvalid() {
+        void shouldThrowUnprocessableEntity_WhenExerciseIdIsInvalid() {
             // Arrange (peRepo -> empty, exerciseRepo -> invalid, sessionRepo -> valid)
-            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SSID, TEST_PE_POSITION, TEST_UID))
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
                     .thenReturn(Optional.empty());
-            when(exerciseRepo.findByIdAndUid(TEST_EID, TEST_UID)).thenReturn(Optional.empty());
-            when(sessionRepo.findByIdAndUid(TEST_SSID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
 
             // Act & Assert
-            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EID).sessionId(TEST_SSID)
+            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).sessionId(TEST_SESSION_ID)
                     .position(TEST_PE_POSITION).build();
             assertThatThrownBy(() -> underTest.createPerformedExercise(TEST_UID, dto))
                     .isInstanceOf(UnprocessableEntityException.class);
@@ -119,16 +119,16 @@ public class PerformedExerciseServiceTests {
         @Test
         void shouldReturnCreatedExercise_WhenEverythingValid() {
             // Arrange (peRepo -> empty, exerciseRepo -> valid, sessionRepo -> valid)
-            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SSID, TEST_PE_POSITION, TEST_UID))
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
                     .thenReturn(Optional.empty());
-            when(exerciseRepo.findByIdAndUid(TEST_EID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
-            when(sessionRepo.findByIdAndUid(TEST_SSID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
 
             PerformedExercise testPE = createTestPerformedExercise();
             when(peRepo.save(testPE)).thenReturn(testPE);
 
             // Act
-            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EID).sessionId(TEST_SSID)
+            CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).sessionId(TEST_SESSION_ID)
                     .position(TEST_PE_POSITION).build();
             underTest.createPerformedExercise(TEST_UID, dto);
             verify(peRepo).save(testPE);
@@ -141,23 +141,23 @@ public class PerformedExerciseServiceTests {
         @Test
         public void shouldThrowNotFound_WhenPEDoesNotExist() {
             // Arrange (peRepo doesnt find the existing PE)
-            when(peRepo.findByIdAndUid(TEST_PEID, TEST_UID)).thenReturn(Optional.empty());
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
 
             // Act & Assert
-            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EID).build();
-            assertThatThrownBy(() -> underTest.updatePerformedExercise(TEST_UID, TEST_PEID, dto))
+            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).build();
+            assertThatThrownBy(() -> underTest.updatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
-        public void shouldThrowUnprocessableEntity_WhenEidIsInvalid() {
+        public void shouldThrowUnprocessableEntity_WhenExerciseIdIsInvalid() {
             // Arrange (peRepo finds the PE, exerciseRepo finds nothing)
-            when(peRepo.findByIdAndUid(TEST_PEID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
-            when(exerciseRepo.findByIdAndUid(TEST_EID, TEST_UID)).thenReturn(Optional.empty());
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
 
             // Act & Assert
-            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EID).build();
-            assertThatThrownBy(() -> underTest.updatePerformedExercise(TEST_UID, TEST_PEID, dto))
+            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).build();
+            assertThatThrownBy(() -> underTest.updatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto))
                     .isInstanceOf(UnprocessableEntityException.class);
         }
 
@@ -165,13 +165,13 @@ public class PerformedExerciseServiceTests {
         public void shouldReturnUpdatedExercise_WhenEverythingValid() {
             // Arrange (peRepo finds the PE, exerciseRepo finds an exercise, save returns an
             // updated PerformedExercise)
-            when(peRepo.findByIdAndUid(TEST_PEID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
-            when(exerciseRepo.findByIdAndUid(TEST_EID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
             when(peRepo.save(createTestPerformedExercise())).thenReturn(createTestPerformedExercise());
 
             // Act & Assert
-            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EID).build();
-            underTest.updatePerformedExercise(TEST_UID, TEST_PEID, dto);
+            UpdatePerformedExerciseDto dto = UpdatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).build();
+            underTest.updatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto);
         }
     }
 
@@ -181,20 +181,20 @@ public class PerformedExerciseServiceTests {
         @Test
         public void shouldThrowNotFound_WhenPEDoesNotExist() {
             // Arrange (peRepo doesnt find the existing PE)
-            when(peRepo.findByIdAndUid(TEST_PEID, TEST_UID)).thenReturn(Optional.empty());
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
 
             // Act & Assert
-            assertThatThrownBy(() -> underTest.deletePerformedExercise(TEST_UID, TEST_PEID))
+            assertThatThrownBy(() -> underTest.deletePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         public void shouldRunSuccessfully_WhenPEExists() {
             // Arrange (peRepo finds the PE)
-            when(peRepo.findByIdAndUid(TEST_PEID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestPerformedExercise()));
 
             // Act & Assert
-            underTest.deletePerformedExercise(TEST_UID, TEST_PEID);
+            underTest.deletePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID);
             verify(peRepo).delete(createTestPerformedExercise());
         }
     }

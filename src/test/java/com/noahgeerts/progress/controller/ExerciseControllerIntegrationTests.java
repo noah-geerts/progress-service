@@ -173,7 +173,7 @@ public class ExerciseControllerIntegrationTests {
     }
 
     @Test
-    void shouldReturnNotFound_whenEidDoesntExist() throws Exception {
+    void shouldReturnNotFound_whenIdDoesntExist() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);
@@ -186,7 +186,7 @@ public class ExerciseControllerIntegrationTests {
     }
 
     @Test
-    void shouldReturnNotFound_ifEidBelongsToAnotherUser() throws Exception {
+    void shouldReturnNotFound_ifIdBelongsToAnotherUser() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);
@@ -202,7 +202,7 @@ public class ExerciseControllerIntegrationTests {
   @Nested
   class DeleteExercise {
     @Test
-    void shouldReturnNotFound_whenEidDoesntExist() throws Exception {
+    void shouldReturnNotFound_whenIdDoesntExist() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);

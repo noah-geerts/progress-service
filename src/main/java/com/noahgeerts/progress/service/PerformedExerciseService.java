@@ -42,8 +42,8 @@ public class PerformedExerciseService {
    * @return The newly created PerformedExercise
    * @throws ConflictException            if a PerformedExercise already exists
    *                                      with the
-   *                                      provided position and ssid
-   * @throws UnprocessableEntityException if the ssid or eid do not correspond to
+  *                                      provided position and session id
+  * @throws UnprocessableEntityException if the session id or exercise id do not correspond to
    *                                      a valid session or exercise
    */
   public PerformedExerciseResponseDto createPerformedExercise(String uid, CreatePerformedExerciseDto dto) {
@@ -51,13 +51,13 @@ public class PerformedExerciseService {
     Optional<PerformedExercise> existingPE = peRepo.findBySession_IdAndPositionAndUid(dto.getSessionId(),
         dto.getPosition(), uid);
     if (existingPE.isPresent())
-      throw new ConflictException("PerformedExercise with the given ssid and position already exist for this user");
+      throw new ConflictException("PerformedExercise with the given session id and position already exist for this user");
 
-    // Check that the provided eid and ssid are valid
+    // Check that the provided exercise id and session id are valid
     Optional<Session> existingSession = sessionRepo.findByIdAndUid(dto.getSessionId(), uid);
     Optional<Exercise> existingExercise = exerciseRepo.findByIdAndUid(dto.getExerciseId(), uid);
     if (existingSession.isEmpty() || existingExercise.isEmpty())
-      throw new UnprocessableEntityException("The ssid or eid provided for the PerformedExercise is invalid");
+      throw new UnprocessableEntityException("The session id or exercise id provided for the PerformedExercise is invalid");
 
     // Create the new PerformedExercise
     PerformedExercise newPE = PerformedExercise.builder().session(existingSession.get())
@@ -75,17 +75,17 @@ public class PerformedExerciseService {
    *                                      to a valid exercise
    * @throws ResourceNotFoundException    if the exercise does not exist
    */
-  public PerformedExerciseResponseDto updatePerformedExercise(String uid, UUID peid, UpdatePerformedExerciseDto dto) {
+  public PerformedExerciseResponseDto updatePerformedExercise(String uid, UUID id, UpdatePerformedExerciseDto dto) {
     // Make sure it exists
-    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(peid, uid);
+    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(id, uid);
     if (existingPE.isEmpty())
       throw new ResourceNotFoundException(
-          "The given peid does not correspond to a valid PerformedExercise for this user");
+              "The given id does not correspond to a valid PerformedExercise for this user");
 
-    // Check if the new eid is valid
+            // Check if the new exercise id is valid
     Optional<Exercise> newExercise = exerciseRepo.findByIdAndUid(dto.getExerciseId(), uid);
     if (newExercise.isEmpty())
-      throw new UnprocessableEntityException("The provided eid does not correspond to a valid Exercise for this user");
+      throw new UnprocessableEntityException("The provided exercise id does not correspond to a valid Exercise for this user");
 
     // Update the PerformedExercise
     PerformedExercise updated = existingPE.get();
@@ -95,18 +95,18 @@ public class PerformedExerciseService {
   }
 
   /**
-   * Deletes the PerformedExercise by peid
+  * Deletes the PerformedExercise by id
    * 
    * @param uid
-   * @param peid
+  * @param id
    * @throws ResourceNotFoundException if the PerformedExercise does not exist
    */
-  public void deletePerformedExercise(String uid, UUID peid) {
+  public void deletePerformedExercise(String uid, UUID id) {
     // Make sure it exists
-    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(peid, uid);
+    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(id, uid);
     if (existingPE.isEmpty())
       throw new ResourceNotFoundException(
-          "The given peid does not correspond to a valid PerformedExercise for this user");
+          "The given id does not correspond to a valid PerformedExercise for this user");
 
     // Delete it (and remove it from its parent session)
     PerformedExercise pe = existingPE.get();

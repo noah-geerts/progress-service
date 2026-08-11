@@ -96,7 +96,7 @@ public class ExerciseServiceTests {
   }
 
   @Test
-  public void updateExercise_DBFindsNoSuchEid_throwsNotFound() {
+  public void updateExercise_DBFindsNoSuchId_throwsNotFound() {
     // Arrange (find by id and uid should return an empty optional)
     when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
@@ -122,7 +122,7 @@ public class ExerciseServiceTests {
   }
 
   @Test
-  public void updateExercise_EidValidAndNameNotTaken_returnsUpdatedExerciseDto() {
+  public void updateExercise_IdValidAndNameNotTaken_returnsUpdatedExerciseDto() {
     // Arrange (find by id and uid should return an exercise, but find by name and
     // uid shouldn't
     Exercise updated = Exercise.builder().name("Updated name").id(TEST_ID).build();
@@ -141,8 +141,8 @@ public class ExerciseServiceTests {
   }
 
   @Test
-  public void deleteExercise_DBFindsNoSuchEid_throwsNotFound() {
-    // Arrange (find by uid and eid should return empty)
+  public void deleteExercise_DBFindsNoSuchId_throwsNotFound() {
+    // Arrange (find by uid and id should return empty)
     when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
     // Act & Assert
@@ -151,7 +151,7 @@ public class ExerciseServiceTests {
 
   @Test
   public void deleteExercise_DBThrowsDataIntegrityViolation_throwsUnprocessable() {
-    // Arrange (find by uid and eid should return the old exercise, delete should
+    // Arrange (find by uid and id should return the old exercise, delete should
     // throw a DataIntegrityViolationException)
     Exercise toDelete = Exercise.builder().name("Updated name").id(TEST_ID).build();
     when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(toDelete));
@@ -164,7 +164,7 @@ public class ExerciseServiceTests {
 
   @Test
   public void deleteExercise_DBDeletesSuccessfully_throwsNothing() {
-    // Arrange (find by uid and eid should return the old exercise)
+    // Arrange (find by uid and id should return the old exercise)
     Exercise toDelete = Exercise.builder().name("Updated name").id(TEST_ID).build();
     when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(toDelete));
 

@@ -38,16 +38,16 @@ public class PerformedSetController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PatchMapping("/{stid}")
+    @PatchMapping("/{id}")
     public ResponseEntity<PerformedSetResponseDto> updatePerformedSet(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable UUID stid, @Validated @RequestBody UpdatePerformedSetDto dto) {
-        PerformedSetResponseDto updated = setService.updatePerformedSet(jwt.getSubject(), stid, dto);
+            @PathVariable UUID id, @Validated @RequestBody UpdatePerformedSetDto dto) {
+        PerformedSetResponseDto updated = setService.updatePerformedSet(jwt.getSubject(), id, dto);
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{stid}")
-    public ResponseEntity<Void> deletePerformedSet(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID stid) {
-        setService.deletePerformedSet(jwt.getSubject(), stid);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePerformedSet(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        setService.deletePerformedSet(jwt.getSubject(), id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

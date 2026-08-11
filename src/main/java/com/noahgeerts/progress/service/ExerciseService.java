@@ -59,17 +59,17 @@ public class ExerciseService {
   /**
    * Updates the name of the exercise
    * 
-   * @param eid
+  * @param id
    * @throws ResourceNotFoundException if the exercise does not exist for the
    *                                   given user
    * @throws ConflictException         if an exercise already exists with the name
    *                                   provided in the dto
    */
-  public ExerciseResponseDto updateExercise(String uid, ExerciseRequestDto dto, UUID eid) {
+  public ExerciseResponseDto updateExercise(String uid, ExerciseRequestDto dto, UUID id) {
     // Check if the exercise exists by id
-    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(eid, uid);
+    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(id, uid);
     if (existingById.isEmpty())
-      throw new ResourceNotFoundException("Exercise with provided eid does not exist for this user");
+      throw new ResourceNotFoundException("Exercise with provided id does not exist for this user");
 
     // Check if there is already another exercise with the desired name
     Optional<Exercise> existingByName = exerciseRepo.findByNameAndUid(dto.getName(), uid);
@@ -86,17 +86,17 @@ public class ExerciseService {
   /**
    * Deletes the exercise
    * 
-   * @param eid
+  * @param id
    * @throws ResourceNotFoundException    if the exercise does not exist for the
    *                                      given user
    * @throws UnprocessableEntityException if the exercise is being referenced in
    *                                      Performed Exercises
    */
-  public void deleteExercise(String uid, UUID eid) {
+  public void deleteExercise(String uid, UUID id) {
     // Check if the exercise exists by id
-    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(eid, uid);
+    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(id, uid);
     if (existingById.isEmpty())
-      throw new ResourceNotFoundException("Exercise with provided eid does not exist for this user");
+      throw new ResourceNotFoundException("Exercise with provided id does not exist for this user");
 
     // Delete it
     try {
