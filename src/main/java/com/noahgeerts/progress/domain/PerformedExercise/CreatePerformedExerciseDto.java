@@ -1,5 +1,7 @@
 package com.noahgeerts.progress.domain.PerformedExercise;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,10 +15,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreatePerformedExerciseDto {
   @NotNull
-  private Long eid;
+  private UUID exerciseId;
   
   @NotNull
-  private Long ssid;
+  private UUID sessionId;
 
   @NotNull
   @Min(0) // can't have negative positions. 0 indexed

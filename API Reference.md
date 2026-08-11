@@ -31,21 +31,21 @@ All Performed Exercises will be sorted by order increasing, as well as all sets 
 
 ```json
 {
-  "ssid": 123,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "date": "2024-09-25",
   "name": "Push Day",
   "uid": "auth0|user123",
   "performedExercises": [
     {
-      "peid": 456,
+      "id": "550e8400-e29b-41d4-a716-446655440001",
       "position": 1,
       "exercise": {
-        "eid": 789,
+        "id": "550e8400-e29b-41d4-a716-446655440002",
         "name": "Bench Press"
       },
       "sets": [
         {
-          "stid": 101,
+          "id": "550e8400-e29b-41d4-a716-446655440003",
           "position": 1,
           "reps": 8,
           "weight": 225.5
@@ -79,21 +79,21 @@ Returns an array of sessions for all days in the month that have sessions. Each 
 ```json
 [
   {
-    "ssid": 123,
+    "id": "550e8400-e29b-41d4-a716-446655440000",
     "date": "2024-09-05",
     "name": "Push Day",
     "uid": "auth0|user123",
     "performedExercises": [
       {
-        "peid": 456,
+        "id": "550e8400-e29b-41d4-a716-446655440001",
         "position": 1,
         "exercise": {
-          "eid": 789,
+          "id": "550e8400-e29b-41d4-a716-446655440002",
           "name": "Bench Press"
         },
         "sets": [
           {
-            "stid": 101,
+            "id": "550e8400-e29b-41d4-a716-446655440003",
             "position": 1,
             "reps": 8,
             "weight": 225.5
@@ -103,21 +103,21 @@ Returns an array of sessions for all days in the month that have sessions. Each 
     ]
   },
   {
-    "ssid": 124,
+    "id": "550e8400-e29b-41d4-a716-446655440004",
     "date": "2024-09-07",
     "name": "Pull Day",
     "uid": "auth0|user123",
     "performedExercises": [
       {
-        "peid": 457,
+        "id": "550e8400-e29b-41d4-a716-446655440005",
         "position": 1,
         "exercise": {
-          "eid": 790,
+          "id": "550e8400-e29b-41d4-a716-446655440006",
           "name": "Deadlift"
         },
         "sets": [
           {
-            "stid": 102,
+            "id": "550e8400-e29b-41d4-a716-446655440007",
             "position": 1,
             "reps": 5,
             "weight": 315.0
@@ -171,7 +171,7 @@ POST /sessions{date}
 
 ```json
 {
-  "ssid": 123,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "date": "2024-09-25",
   "name": "Push Day",
   "uid": "auth0|user123",
@@ -205,7 +205,7 @@ PATCH /sessions/{date}
 
 ```json
 {
-  "ssid": 123,
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "date": "2024-09-25",
   "name": "Updated Push Day",
   "uid": "auth0|user123",
@@ -254,11 +254,11 @@ Exercises will be sorted alphabetically by name
 ```json
 [
   {
-    "eid": 789,
+    "id": "550e8400-e29b-41d4-a716-446655440002",
     "name": "Bench Press"
   },
   {
-    "eid": 790,
+    "id": "550e8400-e29b-41d4-a716-446655440006",
     "name": "Squat"
   }
 ]
@@ -282,7 +282,7 @@ POST /exercises
 
 ```json
 {
-  "eid": 791,
+  "id": "550e8400-e29b-41d4-a716-446655440008",
   "name": "Deadlift"
 }
 ```
@@ -294,12 +294,12 @@ POST /exercises
 ### Update Exercise
 
 ```http
-PATCH /exercises/{eid}
+PATCH /exercises/{id}
 ```
 
 **Parameters:**
 
-- `eid` (path parameter): Exercise ID
+- `id` (path parameter): Exercise UUID
 
 **Request Body:**
 
@@ -313,25 +313,25 @@ PATCH /exercises/{eid}
 
 ```json
 {
-  "eid": 791,
+  "id": "550e8400-e29b-41d4-a716-446655440008",
   "name": "Updated Exercise"
 }
 ```
 
 **Error Responses:**
 
-- 404 Not Found if there is no exercise with the given eid
+- 404 Not Found if there is no exercise with the given id
 - 409 Conflict if there is already an exercise with the given name
 
 ### Delete Exercise
 
 ```http
-DELETE /exercises/{eid}
+DELETE /exercises/{id}
 ```
 
 **Parameters:**
 
-- `eid` (path parameter): Exercise ID
+- `id` (path parameter): Exercise UUID
 
 **Response:**
 
@@ -341,7 +341,7 @@ DELETE /exercises/{eid}
 
 **Error Responses:**
 
-- 404 Not Found if there is no exercise with the given eid
+- 404 Not Found if there is no exercise with the given id
 - 422 Unprocessable Entity if the exercise cannot be deleted because it is used in Performed Exercises
 
 ---
@@ -358,8 +358,8 @@ POST /performed-exercises
 
 ```json
 {
-  "eid": 789,
-  "ssid": 123,
+  "exerciseId": "550e8400-e29b-41d4-a716-446655440002",
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
   "position": 1
 }
 ```
@@ -368,10 +368,10 @@ POST /performed-exercises
 
 ```json
 {
-  "peid": 456,
+  "id": "550e8400-e29b-41d4-a716-446655440001",
   "position": 1,
   "exercise": {
-    "eid": 789,
+    "id": "550e8400-e29b-41d4-a716-446655440002",
     "name": "Bench Press"
   },
   "sets": []
@@ -380,24 +380,24 @@ POST /performed-exercises
 
 **Error Responses:**
 
-- 409 Conflict if there is already a Performed Exercise with the given ssid and order
-- 422 Unprocessable Entity if the ssid or eid do not correspond to a valid session or exercise
+- 409 Conflict if there is already a Performed Exercise with the given sessionId and order
+- 422 Unprocessable Entity if the sessionId or exerciseId do not correspond to a valid session or exercise
 
 ### Update Performed Exercise
 
 ```http
-PATCH /performed-exercises/{peid}
+PATCH /performed-exercises/{id}
 ```
 
 **Parameters:**
 
-- `peid` (path parameter): Performed Exercise ID
+- `id` (path parameter): Performed Exercise UUID
 
 **Request Body:**
 
 ```json
 {
-  "eid": 790
+  "exerciseId": "550e8400-e29b-41d4-a716-446655440006"
 }
 ```
 
@@ -405,10 +405,10 @@ PATCH /performed-exercises/{peid}
 
 ```json
 {
-  "peid": 456,
+  "id": "550e8400-e29b-41d4-a716-446655440001",
   "position": 1,
   "exercise": {
-    "eid": 790,
+    "id": "550e8400-e29b-41d4-a716-446655440006",
     "name": "Squat"
   },
   "sets": []
@@ -417,18 +417,18 @@ PATCH /performed-exercises/{peid}
 
 **Error Responses:**
 
-- 422 Unprocessable Entity if the eid does not correspond to a valid exercise
+- 422 Unprocessable Entity if the exerciseId does not correspond to a valid exercise
 - 404 Not Found if the Performed Exercise does not exist
 
 ### Delete Performed Exercise
 
 ```http
-DELETE /performed-exercises/{peid}
+DELETE /performed-exercises/{id}
 ```
 
 **Parameters:**
 
-- `peid` (path parameter): Performed Exercise ID
+- `id` (path parameter): Performed Exercise UUID
 
 **Response:**
 
@@ -454,7 +454,7 @@ POST /sets
 
 ```json
 {
-  "peid": 456,
+  "performedExerciseId": "550e8400-e29b-41d4-a716-446655440001",
   "position": 1,
   "reps": 8,
   "weight": 225.5
@@ -465,7 +465,7 @@ POST /sets
 
 ```json
 {
-  "stid": 101,
+  "id": "550e8400-e29b-41d4-a716-446655440003",
   "position": 1,
   "reps": 8,
   "weight": 225.5
@@ -474,18 +474,18 @@ POST /sets
 
 **Error Responses:**
 
-- 409 Conflict if a Set already exists with the given order and peid
-- 422 Unprocessable Entity if the provided peid does not correspond to a valid Performed Exercise
+- 409 Conflict if a Set already exists with the given order and performedExerciseId
+- 422 Unprocessable Entity if the provided performedExerciseId does not correspond to a valid Performed Exercise
 
 ### Update PerformedSet
 
 ```http
-PATCH /sets/{stid}
+PATCH /sets/{id}
 ```
 
 **Parameters:**
 
-- `stid` (path parameter): PerformedSet ID
+- `id` (path parameter): PerformedSet UUID
 
 **Request Body:**
 
@@ -500,7 +500,7 @@ PATCH /sets/{stid}
 
 ```json
 {
-  "stid": 101,
+  "id": "550e8400-e29b-41d4-a716-446655440003",
   "position": 1,
   "reps": 10,
   "weight": 230.0
@@ -509,17 +509,17 @@ PATCH /sets/{stid}
 
 **Error Responses:**
 
-- 404 Not Found if the set with the given stid does not exist
+- 404 Not Found if the set with the given id does not exist
 
 ### Delete PerformedSet
 
 ```http
-DELETE /sets/{stid}
+DELETE /sets/{id}
 ```
 
 **Parameters:**
 
-- `stid` (path parameter): PerformedSet ID
+- `id` (path parameter): PerformedSet UUID
 
 **Response:**
 
@@ -529,7 +529,7 @@ DELETE /sets/{stid}
 
 **Error Responses:**
 
-- 404 Not Found if the set with the given stid does not exist
+- 404 Not Found if the set with the given id does not exist
 
 ---
 
@@ -551,7 +551,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "ssid": "number",
+  "id": "UUID",
   "date": "string (ISO date)",
   "name": "string",
   "uid": "string",
@@ -573,7 +573,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "eid": "number",
+  "id": "UUID",
   "name": "string"
 }
 ```
@@ -584,8 +584,8 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "eid": "number",
-  "ssid": "number",
+  "exerciseId": "UUID",
+  "sessionId": "UUID",
   "position": "number"
 }
 ```
@@ -594,7 +594,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "eid": "number"
+  "exerciseId": "UUID"
 }
 ```
 
@@ -602,7 +602,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "peid": "number",
+  "id": "UUID",
   "position": "number",
   "exercise": "ExerciseResponseDto",
   "sets": "SetResponseDto[]"
@@ -615,7 +615,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "peid": "number",
+  "performedExerciseId": "UUID",
   "position": "number",
   "reps": "number",
   "weight": "number"
@@ -635,7 +635,7 @@ Used for creating and updating sessions.
 
 ```json
 {
-  "stid": "number",
+  "id": "UUID",
   "position": "number",
   "reps": "number",
   "weight": "number"

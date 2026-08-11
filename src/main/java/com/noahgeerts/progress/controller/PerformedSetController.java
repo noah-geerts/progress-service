@@ -1,5 +1,7 @@
 package com.noahgeerts.progress.controller;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,13 +40,13 @@ public class PerformedSetController {
 
     @PatchMapping("/{stid}")
     public ResponseEntity<PerformedSetResponseDto> updatePerformedSet(@AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long stid, @Validated @RequestBody UpdatePerformedSetDto dto) {
+            @PathVariable UUID stid, @Validated @RequestBody UpdatePerformedSetDto dto) {
         PerformedSetResponseDto updated = setService.updatePerformedSet(jwt.getSubject(), stid, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{stid}")
-    public ResponseEntity<Void> deletePerformedSet(@AuthenticationPrincipal Jwt jwt, @PathVariable Long stid) {
+    public ResponseEntity<Void> deletePerformedSet(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID stid) {
         setService.deletePerformedSet(jwt.getSubject(), stid);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

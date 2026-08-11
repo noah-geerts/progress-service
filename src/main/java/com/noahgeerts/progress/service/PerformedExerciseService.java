@@ -1,6 +1,7 @@
 package com.noahgeerts.progress.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -47,14 +48,14 @@ public class PerformedExerciseService {
    */
   public PerformedExerciseResponseDto createPerformedExercise(String uid, CreatePerformedExerciseDto dto) {
     // Check if it already exists
-    Optional<PerformedExercise> existingPE = peRepo.findBySession_SsidAndPositionAndUid(dto.getSsid(),
+    Optional<PerformedExercise> existingPE = peRepo.findBySession_IdAndPositionAndUid(dto.getSessionId(),
         dto.getPosition(), uid);
     if (existingPE.isPresent())
       throw new ConflictException("PerformedExercise with the given ssid and position already exist for this user");
 
     // Check that the provided eid and ssid are valid
-    Optional<Session> existingSession = sessionRepo.findBySsidAndUid(dto.getSsid(), uid);
-    Optional<Exercise> existingExercise = exerciseRepo.findByEidAndUid(dto.getEid(), uid);
+    Optional<Session> existingSession = sessionRepo.findByIdAndUid(dto.getSessionId(), uid);
+    Optional<Exercise> existingExercise = exerciseRepo.findByIdAndUid(dto.getExerciseId(), uid);
     if (existingSession.isEmpty() || existingExercise.isEmpty())
       throw new UnprocessableEntityException("The ssid or eid provided for the PerformedExercise is invalid");
 
@@ -74,15 +75,15 @@ public class PerformedExerciseService {
    *                                      to a valid exercise
    * @throws ResourceNotFoundException    if the exercise does not exist
    */
-  public PerformedExerciseResponseDto updatePerformedExercise(String uid, Long peid, UpdatePerformedExerciseDto dto) {
+  public PerformedExerciseResponseDto updatePerformedExercise(String uid, UUID peid, UpdatePerformedExerciseDto dto) {
     // Make sure it exists
-    Optional<PerformedExercise> existingPE = peRepo.findByPeidAndUid(peid, uid);
+    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(peid, uid);
     if (existingPE.isEmpty())
       throw new ResourceNotFoundException(
           "The given peid does not correspond to a valid PerformedExercise for this user");
 
     // Check if the new eid is valid
-    Optional<Exercise> newExercise = exerciseRepo.findByEidAndUid(dto.getEid(), uid);
+    Optional<Exercise> newExercise = exerciseRepo.findByIdAndUid(dto.getExerciseId(), uid);
     if (newExercise.isEmpty())
       throw new UnprocessableEntityException("The provided eid does not correspond to a valid Exercise for this user");
 
@@ -100,9 +101,9 @@ public class PerformedExerciseService {
    * @param peid
    * @throws ResourceNotFoundException if the PerformedExercise does not exist
    */
-  public void deletePerformedExercise(String uid, Long peid) {
+  public void deletePerformedExercise(String uid, UUID peid) {
     // Make sure it exists
-    Optional<PerformedExercise> existingPE = peRepo.findByPeidAndUid(peid, uid);
+    Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(peid, uid);
     if (existingPE.isEmpty())
       throw new ResourceNotFoundException(
           "The given peid does not correspond to a valid PerformedExercise for this user");

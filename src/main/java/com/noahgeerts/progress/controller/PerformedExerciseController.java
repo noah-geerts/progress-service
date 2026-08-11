@@ -1,6 +1,7 @@
 package com.noahgeerts.progress.controller;
 
-import org.apache.catalina.connector.Response;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,7 +38,7 @@ public class PerformedExerciseController {
 
   @PatchMapping("/{peid}")
   public ResponseEntity<PerformedExerciseResponseDto> updatePerformedExercise(@AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long peid,
+      @PathVariable UUID peid,
       @Validated @RequestBody UpdatePerformedExerciseDto dto) {
     PerformedExerciseResponseDto result = peService.updatePerformedExercise(jwt.getSubject(), peid, dto);
     return ResponseEntity.ok(result);
@@ -45,7 +46,7 @@ public class PerformedExerciseController {
 
   @DeleteMapping("/{peid}")
   public ResponseEntity<Void> deletePerformedExercise(@AuthenticationPrincipal Jwt jwt,
-      @PathVariable Long peid) {
+      @PathVariable UUID peid) {
     peService.deletePerformedExercise(jwt.getSubject(), peid);
     return ResponseEntity.noContent().build();
   }

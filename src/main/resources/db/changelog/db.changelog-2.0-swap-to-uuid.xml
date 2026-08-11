@@ -1,0 +1,95 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="noahg" id="swap-exercise-to-uuid">
+        <sql dbms="postgresql">
+            ALTER TABLE exercise ADD COLUMN id UUID;
+            UPDATE exercise SET id = gen_random_uuid() WHERE id IS NULL;
+            ALTER TABLE exercise ALTER COLUMN id SET DEFAULT gen_random_uuid();
+            ALTER TABLE exercise ALTER COLUMN id SET NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet author="noahg" id="swap-session-to-uuid">
+        <sql dbms="postgresql">
+            ALTER TABLE session ADD COLUMN id UUID;
+            UPDATE session SET id = gen_random_uuid() WHERE id IS NULL;
+            ALTER TABLE session ALTER COLUMN id SET DEFAULT gen_random_uuid();
+            ALTER TABLE session ALTER COLUMN id SET NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet author="noahg" id="swap-performed-exercise-to-uuid">
+        <sql dbms="postgresql">
+            ALTER TABLE performed_exercise ADD COLUMN id UUID;
+            UPDATE performed_exercise SET id = gen_random_uuid() WHERE id IS NULL;
+            ALTER TABLE performed_exercise ALTER COLUMN id SET DEFAULT gen_random_uuid();
+            ALTER TABLE performed_exercise ALTER COLUMN id SET NOT NULL;
+
+            ALTER TABLE performed_exercise ADD COLUMN session_id UUID;
+            ALTER TABLE performed_exercise ADD COLUMN exercise_id UUID;
+
+            UPDATE performed_exercise pe
+            SET session_id = s.id
+            FROM session s
+            WHERE pe.session_ssid = s.ssid;
+
+            UPDATE performed_exercise pe
+            SET exercise_id = e.id
+            FROM exercise e
+            WHERE pe.exercise_eid = e.eid;
+
+            ALTER TABLE performed_exercise ALTER COLUMN session_id SET NOT NULL;
+            ALTER TABLE performed_exercise ALTER COLUMN exercise_id SET NOT NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet author="noahg" id="swap-performed-set-to-uuid">
+        <sql dbms="postgresql">
+            ALTER TABLE performed_set ADD COLUMN id UUID;
+            UPDATE performed_set SET id = gen_random_uuid() WHERE id IS NULL;
+            ALTER TABLE performed_set ALTER COLUMN id SET DEFAULT gen_random_uuid();
+            ALTER TABLE performed_set ALTER COLUMN id SET NOT NULL;
+
+            ALTER TABLE performed_set ADD COLUMN performed_exercise_id UUID;
+
+            UPDATE performed_set ps
+            SET performed_exercise_id = pe.id
+            FROM performed_exercise pe
+            WHERE ps.performed_exercise_peid = pe.peid;
+
+            ALTER TABLE performed_set ALTER COLUMN performed_exercise_id SET NOT NULL;
+
+            ALTER TABLE performed_exercise DROP CONSTRAINT fkambwfh3ioqcru0k1ritrjsidn;
+            ALTER TABLE performed_set DROP CONSTRAINT fkil6bhdx09wplo08wkinuaq9l0;
+            ALTER TABLE performed_exercise DROP CONSTRAINT fkjwryb1uutja4r5phsnfg5e3fl;
+
+            ALTER TABLE exercise DROP CONSTRAINT exercise_pkey;
+            ALTER TABLE session DROP CONSTRAINT session_pkey;
+            ALTER TABLE performed_exercise DROP CONSTRAINT performed_exercise_pkey;
+            ALTER TABLE performed_set DROP CONSTRAINT performed_set_pkey;
+
+            ALTER TABLE exercise ADD CONSTRAINT exercise_pkey PRIMARY KEY (id);
+            ALTER TABLE session ADD CONSTRAINT session_pkey PRIMARY KEY (id);
+            ALTER TABLE performed_exercise ADD CONSTRAINT performed_exercise_pkey PRIMARY KEY (id);
+            ALTER TABLE performed_set ADD CONSTRAINT performed_set_pkey PRIMARY KEY (id);
+
+            ALTER TABLE performed_exercise
+                ADD CONSTRAINT performed_exercise_session_id_fkey
+                FOREIGN KEY (session_id) REFERENCES session (id);
+            ALTER TABLE performed_exercise
+                ADD CONSTRAINT performed_exercise_exercise_id_fkey
+                FOREIGN KEY (exercise_id) REFERENCES exercise (id);
+            ALTER TABLE performed_set
+                ADD CONSTRAINT performed_set_performed_exercise_id_fkey
+                FOREIGN KEY (performed_exercise_id) REFERENCES performed_exercise (id);
+
+            ALTER TABLE performed_exercise DROP COLUMN session_ssid;
+            ALTER TABLE performed_exercise DROP COLUMN exercise_eid;
+            ALTER TABLE performed_set DROP COLUMN performed_exercise_peid;
+            ALTER TABLE exercise DROP COLUMN eid;
+            ALTER TABLE session DROP COLUMN ssid;
+            ALTER TABLE performed_exercise DROP COLUMN peid;
+            ALTER TABLE performed_set DROP COLUMN stid;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

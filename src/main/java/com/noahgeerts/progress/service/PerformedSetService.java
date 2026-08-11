@@ -1,6 +1,7 @@
 package com.noahgeerts.progress.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -42,14 +43,14 @@ public class PerformedSetService {
    */
   public PerformedSetResponseDto createPerformedSet(String uid, CreatePerformedSetDto dto) {
     // Check if the performedSet already exists
-    Optional<PerformedSet> existing = setRepo.findByPerformedExercise_PeidAndPositionAndUid(dto.getPeid(),
+    Optional<PerformedSet> existing = setRepo.findByPerformedExercise_IdAndPositionAndUid(dto.getPerformedExerciseId(),
         dto.getPosition(), uid);
     if (!existing.isEmpty())
       throw new ConflictException("PerformedSet already exists with the provided peid and position for this user");
 
     // Check if the peid provided corresponds to a valid PerformedExercise owned by
     // this user
-    Optional<PerformedExercise> existingPe = peRepo.findByPeidAndUid(dto.getPeid(), uid);
+    Optional<PerformedExercise> existingPe = peRepo.findByIdAndUid(dto.getPerformedExerciseId(), uid);
     if (existingPe.isEmpty())
       throw new UnprocessableEntityException(
           "Provided peid does not correspond to a valid PerformedExercise for this user");
@@ -69,9 +70,9 @@ public class PerformedSetService {
    * @throws ResourceNotFoundException if there is no PerformedSet with the given
    *                                   stid for the current user
    */
-  public PerformedSetResponseDto updatePerformedSet(String uid, Long stid, UpdatePerformedSetDto dto) {
+  public PerformedSetResponseDto updatePerformedSet(String uid, UUID stid, UpdatePerformedSetDto dto) {
     // Check if it exists
-    Optional<PerformedSet> existing = setRepo.findByStidAndUid(stid, uid);
+    Optional<PerformedSet> existing = setRepo.findByIdAndUid(stid, uid);
     if (existing.isEmpty())
       throw new ResourceNotFoundException("PerformedSet with the given stid does not exist for this user");
 
@@ -91,9 +92,9 @@ public class PerformedSetService {
    * @throws ResourceNotFoundException if there is no PerformedSet with the given
    *                                   stid for the current user
    */
-  public void deletePerformedSet(String uid, Long stid) {
+  public void deletePerformedSet(String uid, UUID stid) {
     // Check if it exists
-    Optional<PerformedSet> existing = setRepo.findByStidAndUid(stid, uid);
+    Optional<PerformedSet> existing = setRepo.findByIdAndUid(stid, uid);
     if (existing.isEmpty())
       throw new ResourceNotFoundException("PerformedSet with the given stid does not exist for this user");
 

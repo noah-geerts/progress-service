@@ -5,6 +5,7 @@ import com.noahgeerts.progress.domain.Exercise.ExerciseResponseDto;
 import com.noahgeerts.progress.service.ExerciseService;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,13 +45,13 @@ public class ExerciseController {
 
   @PatchMapping("/{eid}")
   public ResponseEntity<ExerciseResponseDto> updateExercise(@AuthenticationPrincipal Jwt jwt,
-      @Validated @RequestBody ExerciseRequestDto dto, @PathVariable Long eid) {
+      @Validated @RequestBody ExerciseRequestDto dto, @PathVariable UUID eid) {
     ExerciseResponseDto updatedExercise = exerciseService.updateExercise(jwt.getSubject(), dto, eid);
     return ResponseEntity.ok(updatedExercise);
   }
 
   @DeleteMapping("/{eid}")
-  public ResponseEntity<Void> deleteExercise(@AuthenticationPrincipal Jwt jwt, @PathVariable Long eid) {
+  public ResponseEntity<Void> deleteExercise(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID eid) {
     exerciseService.deleteExercise(jwt.getSubject(), eid);
     return ResponseEntity.noContent().build();
   }

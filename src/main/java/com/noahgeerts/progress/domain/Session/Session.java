@@ -2,6 +2,7 @@ package com.noahgeerts.progress.domain.Session;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import com.noahgeerts.progress.domain.PerformedExercise.PerformedExercise;
 
@@ -25,9 +26,10 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Session {
-  @Id //TODO: migrate to UUID
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long ssid;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id", nullable = false)
+  private UUID id;
 
   @Column(nullable = false)
   private LocalDate date;

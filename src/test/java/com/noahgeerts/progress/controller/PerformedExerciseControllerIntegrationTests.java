@@ -3,6 +3,7 @@ package com.noahgeerts.progress.controller;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
@@ -152,10 +153,10 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnCreated_whenEverythingValid() throws Exception {
                         // Arrange
-                        Long eid = seededExercises.get(0).getEid();
-                        Long ssid = seededSessions.get(0).getSsid();
+                        UUID eid = seededExercises.get(0).getId();
+                        UUID ssid = seededSessions.get(0).getId();
                         String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
-                                        .eid(eid).ssid(ssid).position(3).build());
+                                        .exerciseId(eid).sessionId(ssid).position(3).build());
 
                         // Act & Assert
                         mockMvc.perform(
@@ -163,7 +164,7 @@ public class PerformedExerciseControllerIntegrationTests {
                                                         .contentType("application/json")
                                                         .content(requestBody))
                                         .andExpect(status().isCreated())
-                                        .andExpect(jsonPath("$.exercise.eid").value(eid))
+                                        .andExpect(jsonPath("$.exercise.id").value(eid.toString()))
                                         .andExpect(jsonPath("$.position").value(3));
 
                         // Assert the session in the db now has this PE
@@ -171,16 +172,16 @@ public class PerformedExerciseControllerIntegrationTests {
                         assertThat(session).isPresent();
                         assertThat(session.get().getPerformedExercises())
                                         .isNotEmpty()
-                                        .anyMatch(pe -> pe.getExercise().getEid().equals(eid) && pe.getPosition() == 3);
+                                        .anyMatch(pe -> pe.getExercise().getId().equals(eid) && pe.getPosition() == 3);
                 }
 
                 @Test
                 void shouldReturnConflict_whenAPEAlreadyExistsInThatSessionWithThatPosition() throws Exception {
                         // Arrange
-                        Long eid = seededExercises.get(0).getEid();
-                        Long ssid = seededSessions.get(0).getSsid();
+                        UUID eid = seededExercises.get(0).getId();
+                        UUID ssid = seededSessions.get(0).getId();
                         String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
-                                        .eid(eid).ssid(ssid).position(1).build()); // Position 1 already taken up in
+                                        .exerciseId(eid).sessionId(ssid).position(1).build()); // Position 1 already taken up in
                         // this session by Bench
                         // Press
 
@@ -195,10 +196,10 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnUnprocessable_whenEidOrSsidIsInvalid() throws Exception {
                         // Arrange with invalid eid
-                        Long eid = Long.MAX_VALUE;
-                        Long ssid = seededSessions.get(0).getSsid();
+                        UUID eid = UUID.randomUUID();
+                        UUID ssid = seededSessions.get(0).getId();
                         String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
-                                        .eid(eid).ssid(ssid).position(3).build());
+                                        .exerciseId(eid).sessionId(ssid).position(3).build());
 
                         // Act & Assert
                         mockMvc.perform(
@@ -208,10 +209,10 @@ public class PerformedExerciseControllerIntegrationTests {
                                         .andExpect(status().isUnprocessableEntity());
 
                         // Arrange with invalid ssid
-                        eid = seededExercises.get(0).getEid();
-                        ssid = Long.MAX_VALUE;
+                        eid = seededExercises.get(0).getId();
+                        ssid = UUID.randomUUID();
                         requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
-                                        .eid(eid).ssid(ssid).position(3).build());
+                                        .exerciseId(eid).sessionId(ssid).position(3).build());
 
                         // Act & Assert
                         mockMvc.perform(
@@ -224,11 +225,11 @@ public class PerformedExerciseControllerIntegrationTests {
                 @ParameterizedTest
                 @ValueSource(strings = {
                                 "{}", // missing all fields
-                                "{\"eid\": \"100\", \"ssid\": 123, \"position\": 1}", // eid as string instead of Long
-                                "{\"eid\": 100, \"ssid\": 123, \"position\": 1, \"extraField\": 0}", // extra field
-                                "{\"ssid\": 123, \"position\": 1}", // missing eid
-                                "{\"eid\": 123, \"position\": 1}", // missing ssid
-                                "{\"ssid\": 123, \"eid\": 1}" // missing position
+                                "{\"exerciseId\": \"100\", \"sessionId\": 123, \"position\": 1}", // exercise id as string instead of UUID
+                                "{\"exerciseId\": 100, \"sessionId\": 123, \"position\": 1, \"extraField\": 0}", // extra field
+                                "{\"sessionId\": 123, \"position\": 1}", // missing exercise id
+                                "{\"exerciseId\": 123, \"position\": 1}", // missing session id
+                                "{\"sessionId\": 123, \"exerciseId\": 1}" // missing position
                 })
                 void shouldReturnBadRequest_WhenIncomingRequestBodyDoesntMatchDto(String requestBody) throws Exception {
                         mockMvc.perform(
@@ -246,30 +247,30 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnOk_whenEverythingValid() throws Exception {
                         // Arrange
-                        Long eid = seededExercises.get(1).getEid();
-                        Long peid = seededPEs.get(0).getPeid();
+                        UUID eid = seededExercises.get(1).getId();
+                        UUID peid = seededPEs.get(0).getId();
                         String requestBody = objectMapper
-                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().eid(eid).build());
+                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().exerciseId(eid).build());
 
                         // Act
                         mockMvc.perform(patch("/performed-exercises/" + peid).with(createTestJWT())
                                         .contentType("application/json").content(requestBody))
-                                        .andExpect(status().isOk()).andExpect(jsonPath("$.peid").value(peid))
-                                        .andExpect(jsonPath("$.exercise.eid").value(eid));
+                                        .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(peid.toString()))
+                                        .andExpect(jsonPath("$.exercise.id").value(eid.toString()));
 
                         // Assert (ensure it was updated in the db)
                         Optional<PerformedExercise> updatedPe = peRepo.findById(peid);
                         assertThat(updatedPe).isNotEmpty();
-                        assertThat(updatedPe.get().getExercise().getEid()).isEqualTo(eid);
+                        assertThat(updatedPe.get().getExercise().getId()).isEqualTo(eid);
                 }
 
                 @Test
                 void shouldReturnNotFound_whenPeidIsNotValid() throws Exception {
                         // Arrange
-                        Long eid = seededExercises.get(1).getEid();
-                        Long peid = Long.MAX_VALUE;
+                        UUID eid = seededExercises.get(1).getId();
+                        UUID peid = UUID.randomUUID();
                         String requestBody = objectMapper
-                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().eid(eid).build());
+                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().exerciseId(eid).build());
 
                         // Act
                         mockMvc.perform(patch("/performed-exercises/" + peid).with(createTestJWT())
@@ -280,10 +281,10 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnUnprocessable_whenEidIsInvalid() throws Exception {
                         // Arrange
-                        Long eid = Long.MAX_VALUE;
-                        Long peid = seededPEs.get(0).getPeid();
+                        UUID eid = UUID.randomUUID();
+                        UUID peid = seededPEs.get(0).getId();
                         String requestBody = objectMapper
-                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().eid(eid).build());
+                                        .writeValueAsString(UpdatePerformedExerciseDto.builder().exerciseId(eid).build());
 
                         // Act
                         mockMvc.perform(patch("/performed-exercises/" + peid).with(createTestJWT())
@@ -292,18 +293,18 @@ public class PerformedExerciseControllerIntegrationTests {
 
                         // Assert (ensure PEID is not updated)
                         Optional<PerformedExercise> peById = peRepo.findById(peid);
-                        assertThat(peById.get().getExercise().getEid())
-                                        .isEqualTo(seededPEs.get(0).getExercise().getEid());
+                        assertThat(peById.get().getExercise().getId())
+                                        .isEqualTo(seededPEs.get(0).getExercise().getId());
                 }
 
                 @ParameterizedTest
-                @ValueSource(strings = { "{}", // missing eid
-                                "{\"eid\": 20, \"extraField\": \"hi\"}", // extra field
-                                "{\"eid\": \"shouldn't be a string\"}" // eid wrong type
+                                @ValueSource(strings = { "{}", // missing exercise id
+                                "{\"exerciseId\": 20, \"extraField\": \"hi\"}", // extra field
+                                "{\"exerciseId\": \"shouldn't be a UUID\"}" // exercise id wrong type
                 })
                 void shouldReturnBadRequest_whenBodyDoesNotMatchDto(String requestBody) throws Exception {
                         // Missing eid
-                        mockMvc.perform(patch("/performed-exercises/" + seededPEs.get(0).getPeid())
+                        mockMvc.perform(patch("/performed-exercises/" + seededPEs.get(0).getId())
                                         .with(createTestJWT())
                                         .contentType("application/json").content(requestBody))
                                         .andExpect(status().isBadRequest());
@@ -316,7 +317,7 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnNoContent_whenValidPeid() throws Exception {
                         // Arrange
-                        Long peid = seededPEs.get(0).getPeid();
+                        UUID peid = seededPEs.get(0).getId();
 
                         // Act
                         mockMvc.perform(delete("/performed-exercises/" + peid).with(createTestJWT()))
@@ -330,7 +331,7 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldReturnNotFound_whenPeidIsNotValid() throws Exception {
                         // Arrange
-                        Long peid = Long.MAX_VALUE;
+                        UUID peid = UUID.randomUUID();
 
                         // Act
                         mockMvc.perform(delete("/performed-exercises/" + peid).with(createTestJWT()))
@@ -347,11 +348,11 @@ public class PerformedExerciseControllerIntegrationTests {
                 @Test
                 void shouldUpdateDBCorrectly_whenCreatingUpdatingDeleting() throws Exception {
                         // Arrange: create a new PerformedExercise
-                        Long eid = seededExercises.get(0).getEid();
-                        Long ssid = seededSessions.get(0).getSsid();
+                        UUID eid = seededExercises.get(0).getId();
+                        UUID ssid = seededSessions.get(0).getId();
                         int position = 3; // not used yet
                         String createRequest = objectMapper.writeValueAsString(
-                                        CreatePerformedExerciseDto.builder().eid(eid).ssid(ssid).position(position)
+                                        CreatePerformedExerciseDto.builder().exerciseId(eid).sessionId(ssid).position(position)
                                                         .build());
 
                         // Act (create)
@@ -360,36 +361,36 @@ public class PerformedExerciseControllerIntegrationTests {
                                         post("/performed-exercises").with(createTestJWT())
                                                         .contentType("application/json").content(createRequest))
                                         .andExpect(status().isCreated())
-                                        .andExpect(jsonPath("$.exercise.eid").value(eid))
+                                        .andExpect(jsonPath("$.exercise.id").value(eid.toString()))
                                         .andExpect(jsonPath("$.position").value(position))
                                         .andReturn();
 
                         // Assert (created in DB)
                         String createContent = createResult.getResponse().getContentAsString();
-                        Number number = JsonPath.read(createContent, "$.peid");
-                        Long peid = number.longValue();
+                        String id = JsonPath.read(createContent, "$.id");
+                        UUID peid = UUID.fromString(id);
                         Optional<PerformedExercise> created = peRepo.findById(peid);
                         assertThat(created).isNotEmpty();
-                        assertThat(created.get().getExercise().getEid()).isEqualTo(eid);
+                        assertThat(created.get().getExercise().getId()).isEqualTo(eid);
                         assertThat(created.get().getPosition()).isEqualTo(position);
 
                         // Arrange (update: change exercise)
-                        Long newEid = seededExercises.get(1).getEid();
+                        UUID newEid = seededExercises.get(1).getId();
                         String updateRequest = objectMapper.writeValueAsString(
-                                        UpdatePerformedExerciseDto.builder().eid(newEid).build());
+                                        UpdatePerformedExerciseDto.builder().exerciseId(newEid).build());
 
                         // Act (update)
                         mockMvc.perform(
                                         patch("/performed-exercises/" + peid).with(createTestJWT())
                                                         .contentType("application/json").content(updateRequest))
                                         .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.peid").value(peid))
-                                        .andExpect(jsonPath("$.exercise.eid").value(newEid));
+                                        .andExpect(jsonPath("$.id").value(peid.toString()))
+                                        .andExpect(jsonPath("$.exercise.id").value(newEid.toString()));
 
                         // Assert (updated in DB)
                         Optional<PerformedExercise> updated = peRepo.findById(peid);
                         assertThat(updated).isNotEmpty();
-                        assertThat(updated.get().getExercise().getEid()).isEqualTo(newEid);
+                        assertThat(updated.get().getExercise().getId()).isEqualTo(newEid);
 
                         // Act (delete)
                         mockMvc.perform(delete("/performed-exercises/" + peid).with(createTestJWT()))

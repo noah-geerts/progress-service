@@ -1,5 +1,7 @@
 package com.noahgeerts.progress.domain.Exercise;
 
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,9 +18,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Exercise {
-  @Id  //TODO: migrate to UUID
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long eid;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id", nullable = false)
+  private UUID id;
 
   @Column(nullable = false)  //TODO: add max length 50
   private String name;

@@ -3,6 +3,7 @@ package com.noahgeerts.progress.controller;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.AfterEach;
@@ -152,13 +153,13 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnCreatedAndCreateInDB_whenRequestValid() throws Exception {
                         // Arrange
-                        Long peid = seededPEs.get(0).getPeid(); // bench press
+                        UUID peid = seededPEs.get(0).getId(); // bench press
                         int position = 2; // not used yet (bench has 2 sets in seed data, 0 and 1)
                         int reps = 3;
                         double weight = 215.0;
 
                         String requestBody = objectMapper.writeValueAsString(
-                                        CreatePerformedSetDto.builder().peid(peid).position(position).reps(reps)
+                                        CreatePerformedSetDto.builder().performedExerciseId(peid).position(position).reps(reps)
                                                         .weight(weight).build());
 
                         // Act
@@ -173,8 +174,8 @@ public class PerformedSetControllerIntegrationTests {
 
                         // Assert (make sure it was created)
                         String content = result.getResponse().getContentAsString();
-                        Number number = JsonPath.read(content, "$.stid");
-                        Long stid = number.longValue();
+                        String id = JsonPath.read(content, "$.id");
+                        UUID stid = UUID.fromString(id);
                         Optional<PerformedSet> created = setRepo.findById(stid);
                         assertThat(created).isNotEmpty();
                         assertThat(created.get().getPosition()).isEqualTo(position);
@@ -185,13 +186,13 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnConflict_whenSetAlreadyExistsWithPositionAndPeid() throws Exception {
                         // Arrange
-                        Long peid = seededPEs.get(0).getPeid(); // bench press
+                        UUID peid = seededPEs.get(0).getId(); // bench press
                         int position = 1; // already used (bench has 2 sets in seed data, 0 and 1)
                         int reps = 3;
                         double weight = 215.0;
 
                         String requestBody = objectMapper.writeValueAsString(
-                                        CreatePerformedSetDto.builder().peid(peid).position(position).reps(reps)
+                                        CreatePerformedSetDto.builder().performedExerciseId(peid).position(position).reps(reps)
                                                         .weight(weight).build());
 
                         // Act
@@ -207,13 +208,13 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnUnprocessable_whenThePeidProvidedIsInvalid() throws Exception {
                         // Arrange
-                        Long peid = Long.MAX_VALUE; // Not a real PE
+                        UUID peid = UUID.randomUUID(); // Not a real PE
                         int position = 2;
                         int reps = 3;
                         double weight = 215.0;
 
                         String requestBody = objectMapper.writeValueAsString(
-                                        CreatePerformedSetDto.builder().peid(peid).position(position).reps(reps)
+                                        CreatePerformedSetDto.builder().performedExerciseId(peid).position(position).reps(reps)
                                                         .weight(weight).build());
 
                         // Act
@@ -228,20 +229,20 @@ public class PerformedSetControllerIntegrationTests {
 
                 @ParameterizedTest
                 @ValueSource(strings = {
-                                "{\"peid\": 1, \"position\": 1, \"reps\": 1, \"weight\": \"shouldn't be a string\"}", // weight
+                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1, \"weight\": \"shouldn't be a string\"}", // weight
                                                                                                                       // wrong
                                 // datatype
-                                "{\"peid\": 1, \"position\": 1, \"reps\": \"string\", \"weight\": 225.0}", // reps wrong
+                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": \"string\", \"weight\": 225.0}", // reps wrong
                                                                                                            // datatype
-                                "{\"peid\": 1, \"position\": \"hi\", \"reps\": 1, \"weight\": 225.0}", // position wrong
+                                "{\"performedExerciseId\": 1, \"position\": \"hi\", \"reps\": 1, \"weight\": 225.0}", // position wrong
                                                                                                        // datatype
-                                "{\"peid\": \"hi\", \"position\": 1, \"reps\": 1, \"weight\": 225.0}", // peid wrong
+                                "{\"performedExerciseId\": \"hi\", \"position\": 1, \"reps\": 1, \"weight\": 225.0}", // performed exercise id wrong
                                                                                                        // datatype
-                                "{\"peid\": 1, \"position\": 1, \"reps\": 1}", // missing weight
-                                "{\"peid\": 1, \"position\": 1, \"weight\": 225.0}", // missing reps
-                                "{\"peid\": 1, \"reps\": 1, \"weight\": 225.0}", // missing position
-                                "{\"position\": 1, \"reps\": 1, \"weight\": 225.0}", // missing peid
-                                "{\"peid\": 1, \"position\": 1, \"reps\": 1, \"weight\": 225.0, \"extra\": 0}" // extra
+                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1}", // missing weight
+                                "{\"performedExerciseId\": 1, \"position\": 1, \"weight\": 225.0}", // missing reps
+                                "{\"performedExerciseId\": 1, \"reps\": 1, \"weight\": 225.0}", // missing position
+                                "{\"position\": 1, \"reps\": 1, \"weight\": 225.0}", // missing performed exercise id
+                                "{\"performedExerciseId\": 1, \"position\": 1, \"reps\": 1, \"weight\": 225.0, \"extra\": 0}" // extra
                                                                                                                // field
                 })
                 void shouldReturnBadRequest_whenRequestBodyDoesNotMatchDto(String requestBody) throws Exception {
@@ -257,7 +258,7 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnOkAndUpdateInDB_whenRequestValid() throws Exception {
                         // Arrange
-                        Long stid = seededSets.get(0).getStid();
+                        UUID stid = seededSets.get(0).getId();
                         int position = seededSets.get(0).getPosition();
                         int reps = 20;
                         double weight = 100.0;
@@ -272,7 +273,7 @@ public class PerformedSetControllerIntegrationTests {
                                         .andExpect(status().isOk()).andExpect(jsonPath("$.position").value(position))
                                         .andExpect(jsonPath("$.reps").value(reps))
                                         .andExpect(jsonPath("$.weight").value(weight))
-                                        .andExpect(jsonPath("$.stid").value(stid));
+                                        .andExpect(jsonPath("$.id").value(stid.toString()));
 
                         // Assert (make sure it was updated)
                         Optional<PerformedSet> updatedInDb = setRepo.findById(stid);
@@ -284,7 +285,7 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnNotFound_whenSetDoesNotExist() throws Exception {
                         // Arrange
-                        Long stid = Long.MAX_VALUE;
+                        UUID stid = UUID.randomUUID();
                         int reps = 20;
                         double weight = 100.0;
 
@@ -308,7 +309,7 @@ public class PerformedSetControllerIntegrationTests {
                 })
                 void shouldReturnBadRequest_whenRequestBodyDoesNotMatchDto(String requestBody) throws Exception {
                         mockMvc.perform(
-                                        patch("/sets/" + seededSets.get(0).getStid()).with(createTestJWT())
+                                        patch("/sets/" + seededSets.get(0).getId()).with(createTestJWT())
                                                         .contentType("application/json")
                                                         .content(requestBody))
                                         .andExpect(status().isBadRequest());
@@ -321,7 +322,7 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnNoContentAndDeleteInDB_whenRequestedSetExists() throws Exception {
                         // Arrange
-                        Long stid = seededSets.get(0).getStid();
+                        UUID stid = seededSets.get(0).getId();
 
                         // Act
                         mockMvc.perform(
@@ -336,7 +337,7 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldReturnNotFound_whenStidIsNotValid() throws Exception {
                         // Arrange
-                        Long stid = Long.MAX_VALUE;
+                        UUID stid = UUID.randomUUID();
 
                         // Act
                         mockMvc.perform(
@@ -355,13 +356,13 @@ public class PerformedSetControllerIntegrationTests {
                 @Test
                 void shouldUpdateDBCorrectly_whenCreatingUpdatingDeleting() throws Exception {
                         // Arrange
-                        Long peid = seededPEs.get(0).getPeid(); // bench press
+                        UUID peid = seededPEs.get(0).getId(); // bench press
                         int position = 2; // not used yet (bench has 2 sets in seed data, 0 and 1)
                         int reps = 3;
                         double weight = 215.0;
 
                         String requestBody = objectMapper.writeValueAsString(
-                                        CreatePerformedSetDto.builder().peid(peid).position(position).reps(reps)
+                                        CreatePerformedSetDto.builder().performedExerciseId(peid).position(position).reps(reps)
                                                         .weight(weight).build());
 
                         // Act (create a third set)
@@ -376,8 +377,8 @@ public class PerformedSetControllerIntegrationTests {
 
                         // Assert (make sure it was created)
                         String content = result.getResponse().getContentAsString();
-                        Number number = JsonPath.read(content, "$.stid");
-                        Long stid = number.longValue();
+                        String id = JsonPath.read(content, "$.id");
+                        UUID stid = UUID.fromString(id);
                         Optional<PerformedSet> created = setRepo.findById(stid);
                         assertThat(created).isNotEmpty();
                         assertThat(created.get().getPosition()).isEqualTo(position);

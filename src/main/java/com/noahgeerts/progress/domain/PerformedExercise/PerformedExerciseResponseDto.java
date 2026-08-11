@@ -1,6 +1,7 @@
 package com.noahgeerts.progress.domain.PerformedExercise;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.noahgeerts.progress.domain.Exercise.ExerciseResponseDto;
 import com.noahgeerts.progress.domain.PerformedSet.PerformedSetResponseDto;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PerformedExerciseResponseDto {
-  private Long peid;
+  private UUID id;
 
   private Integer position;
   private ExerciseResponseDto exercise;

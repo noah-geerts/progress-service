@@ -2,6 +2,7 @@ package com.noahgeerts.progress.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.StreamSupport;
 
 import org.modelmapper.ModelMapper;
@@ -64,9 +65,9 @@ public class ExerciseService {
    * @throws ConflictException         if an exercise already exists with the name
    *                                   provided in the dto
    */
-  public ExerciseResponseDto updateExercise(String uid, ExerciseRequestDto dto, Long eid) {
+  public ExerciseResponseDto updateExercise(String uid, ExerciseRequestDto dto, UUID eid) {
     // Check if the exercise exists by id
-    Optional<Exercise> existingById = exerciseRepo.findByEidAndUid(eid, uid);
+    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(eid, uid);
     if (existingById.isEmpty())
       throw new ResourceNotFoundException("Exercise with provided eid does not exist for this user");
 
@@ -91,9 +92,9 @@ public class ExerciseService {
    * @throws UnprocessableEntityException if the exercise is being referenced in
    *                                      Performed Exercises
    */
-  public void deleteExercise(String uid, Long eid) {
+  public void deleteExercise(String uid, UUID eid) {
     // Check if the exercise exists by id
-    Optional<Exercise> existingById = exerciseRepo.findByEidAndUid(eid, uid);
+    Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(eid, uid);
     if (existingById.isEmpty())
       throw new ResourceNotFoundException("Exercise with provided eid does not exist for this user");
 

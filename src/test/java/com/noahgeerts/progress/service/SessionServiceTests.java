@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -47,39 +48,39 @@ public class SessionServiceTests {
     this.underTest = new SessionService(sessionRepo, new ModelMapper());
   }
 
-  private static final Long TEST_SSID = 1L;
+  private static final UUID TEST_SSID = UUID.fromString("00000000-0000-0000-0000-000000000006");
   private static final LocalDate TEST_SESSION_DATE = LocalDate.of(2004, 10, 04);
   private static final String TEST_SESSION_NAME = "Epic Session";
   private static final String TEST_UID = "uid";
 
   private Session createTestSession() {
-    return Session.builder().ssid(TEST_SSID).date(TEST_SESSION_DATE).name(TEST_SESSION_NAME).uid(TEST_UID).build();
+    return Session.builder().id(TEST_SSID).date(TEST_SESSION_DATE).name(TEST_SESSION_NAME).uid(TEST_UID).build();
   }
 
   private Session createTestSessionWithUnorderedExercisesAndSets() {
     // Create exercises
-    Exercise exercise1 = Exercise.builder().eid(1L).name("Bench Press").uid(TEST_UID).build();
-    Exercise exercise2 = Exercise.builder().eid(2L).name("Squat").uid(TEST_UID).build();
-    Exercise exercise3 = Exercise.builder().eid(3L).name("Deadlift").uid(TEST_UID).build();
+    Exercise exercise1 = Exercise.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000007")).name("Bench Press").uid(TEST_UID).build();
+    Exercise exercise2 = Exercise.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000008")).name("Squat").uid(TEST_UID).build();
+    Exercise exercise3 = Exercise.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000009")).name("Deadlift").uid(TEST_UID).build();
 
     // Create sets for first exercise in wrong order (positions 2, 0, 1)
-    PerformedSet set1_2 = PerformedSet.builder().stid(3L).position(2).reps(8).weight(100).uid(TEST_UID).build();
-    PerformedSet set1_0 = PerformedSet.builder().stid(1L).position(0).reps(10).weight(80).uid(TEST_UID).build();
-    PerformedSet set1_1 = PerformedSet.builder().stid(2L).position(1).reps(9).weight(90).uid(TEST_UID).build();
+    PerformedSet set1_2 = PerformedSet.builder().id(UUID.fromString("00000000-0000-0000-0000-00000000000a")).position(2).reps(8).weight(100).uid(TEST_UID).build();
+    PerformedSet set1_0 = PerformedSet.builder().id(UUID.fromString("00000000-0000-0000-0000-00000000000b")).position(0).reps(10).weight(80).uid(TEST_UID).build();
+    PerformedSet set1_1 = PerformedSet.builder().id(UUID.fromString("00000000-0000-0000-0000-00000000000c")).position(1).reps(9).weight(90).uid(TEST_UID).build();
     List<PerformedSet> unorderedSets1 = Arrays.asList(set1_2, set1_0, set1_1);
 
     // Create performed exercises in wrong order (positions 2, 0, 1)
     PerformedExercise pe2 = PerformedExercise.builder()
-        .peid(3L).position(2).exercise(exercise3).uid(TEST_UID).sets(Arrays.asList()).build();
+        .id(UUID.fromString("00000000-0000-0000-0000-00000000000d")).position(2).exercise(exercise3).uid(TEST_UID).sets(Arrays.asList()).build();
     PerformedExercise pe0 = PerformedExercise.builder()
-        .peid(1L).position(0).exercise(exercise1).uid(TEST_UID).sets(unorderedSets1).build();
+        .id(UUID.fromString("00000000-0000-0000-0000-00000000000e")).position(0).exercise(exercise1).uid(TEST_UID).sets(unorderedSets1).build();
     PerformedExercise pe1 = PerformedExercise.builder()
-        .peid(2L).position(1).exercise(exercise2).uid(TEST_UID).sets(Arrays.asList()).build();
+        .id(UUID.fromString("00000000-0000-0000-0000-00000000000f")).position(1).exercise(exercise2).uid(TEST_UID).sets(Arrays.asList()).build();
 
     List<PerformedExercise> unorderedExercises = Arrays.asList(pe2, pe0, pe1);
 
     return Session.builder()
-        .ssid(TEST_SSID)
+        .id(TEST_SSID)
         .date(TEST_SESSION_DATE)
         .name(TEST_SESSION_NAME)
         .uid(TEST_UID)
@@ -106,7 +107,7 @@ public class SessionServiceTests {
 
       // Act & Assert
       SessionResponseDto result = underTest.getSession(TEST_UID, TEST_SESSION_DATE);
-      assertThat(result.getSsid()).isEqualTo(createTestSession().getSsid());
+      assertThat(result.getId()).isEqualTo(createTestSession().getId());
     }
 
     @Test
@@ -150,7 +151,7 @@ public class SessionServiceTests {
       // Arrange (session repo finds nothing, save returns the new session)
       when(sessionRepo.findByDateAndUid(TEST_SESSION_DATE, TEST_UID)).thenReturn(Optional.empty());
       Session input = createTestSession();
-      input.setSsid(null);
+      input.setId(null);
       when(sessionRepo.save(input)).thenReturn(createTestSession());
 
       // Act & Assert
@@ -173,12 +174,15 @@ public class SessionServiceTests {
       LocalDate oct5 = LocalDate.of(2004, 10, 5);
       LocalDate oct15 = LocalDate.of(2004, 10, 15);
 
-      Session session1 = Session.builder()
-          .ssid(1L).date(oct1).name("Session 1").uid(TEST_UID).build();
+        UUID session1Id = UUID.fromString("00000000-0000-0000-0000-000000000010");
+        UUID session5Id = UUID.fromString("00000000-0000-0000-0000-000000000011");
+        UUID session15Id = UUID.fromString("00000000-0000-0000-0000-000000000012");
+        Session session1 = Session.builder()
+          .id(session1Id).date(oct1).name("Session 1").uid(TEST_UID).build();
       Session session5 = Session.builder()
-          .ssid(5L).date(oct5).name("Session 5").uid(TEST_UID).build();
+          .id(session5Id).date(oct5).name("Session 5").uid(TEST_UID).build();
       Session session15 = Session.builder()
-          .ssid(15L).date(oct15).name("Session 15").uid(TEST_UID).build();
+          .id(session15Id).date(oct15).name("Session 15").uid(TEST_UID).build();
 
       // Mock getSession to return sessions only for specific dates
       doReturn(new ModelMapper().map(session1, SessionResponseDto.class))
@@ -200,9 +204,9 @@ public class SessionServiceTests {
 
       // Assert
       assertThat(result).hasSize(3);
-      assertThat(result.get(0).getSsid()).isEqualTo(1L);
-      assertThat(result.get(1).getSsid()).isEqualTo(5L);
-      assertThat(result.get(2).getSsid()).isEqualTo(15L);
+      assertThat(result.get(0).getId()).isEqualTo(session1Id);
+      assertThat(result.get(1).getId()).isEqualTo(session5Id);
+      assertThat(result.get(2).getId()).isEqualTo(session15Id);
     }
 
     @Test
