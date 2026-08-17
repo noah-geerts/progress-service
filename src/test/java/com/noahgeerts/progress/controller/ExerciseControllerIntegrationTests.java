@@ -2,6 +2,7 @@ package com.noahgeerts.progress.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -160,38 +161,38 @@ public class ExerciseControllerIntegrationTests {
 
       // Act
       mockMvc
-          .perform(patch("/exercises/" + seededExercises.get(0).getEid())
+          .perform(patch("/exercises/" + seededExercises.get(0).getId())
               .with(jwt().jwt(jwt -> jwt.claim("sub", TEST_UID))).contentType("application/json")
               .content(requestBody))
           .andExpect(status().isOk()).andExpect(jsonPath("$.name").value(TEST_EXERCISE));
 
       // Assert
-      Optional<Exercise> fromDB = exerciseRepository.findByEidAndUid(seededExercises.get(0).getEid(), TEST_UID);
+      Optional<Exercise> fromDB = exerciseRepository.findByIdAndUid(seededExercises.get(0).getId(), TEST_UID);
       assertThat(fromDB).isNotEmpty();
       assertThat(fromDB.get().getName()).isEqualTo(TEST_EXERCISE);
     }
 
     @Test
-    void shouldReturnNotFound_whenEidDoesntExist() throws Exception {
+    void shouldReturnNotFound_whenIdDoesntExist() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);
 
       // Act & Assert
-      mockMvc.perform(patch("/exercises/" + Long.MAX_VALUE)
+      mockMvc.perform(patch("/exercises/" + UUID.randomUUID())
           .with(jwt().jwt(jwt -> jwt.claim("sub", TEST_UID))).contentType("application/json")
           .content(requestBody))
           .andExpect(status().isNotFound());
     }
 
     @Test
-    void shouldReturnNotFound_ifEidBelongsToAnotherUser() throws Exception {
+    void shouldReturnNotFound_ifIdBelongsToAnotherUser() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);
 
       // Act & Assert
-      mockMvc.perform(patch("/exercises/" + seededExercises.get(0).getEid())
+      mockMvc.perform(patch("/exercises/" + seededExercises.get(0).getId())
           .with(jwt().jwt(jwt -> jwt.claim("sub", "another user"))).contentType("application/json")
           .content(requestBody))
           .andExpect(status().isNotFound());
@@ -201,13 +202,13 @@ public class ExerciseControllerIntegrationTests {
   @Nested
   class DeleteExercise {
     @Test
-    void shouldReturnNotFound_whenEidDoesntExist() throws Exception {
+    void shouldReturnNotFound_whenIdDoesntExist() throws Exception {
       // Arrange
       ExerciseRequestDto dto = ExerciseRequestDto.builder().name(TEST_EXERCISE).build();
       String requestBody = objectMapper.writeValueAsString(dto);
 
       // Act & Assert
-      mockMvc.perform(delete("/exercises/" + Long.MAX_VALUE)
+      mockMvc.perform(delete("/exercises/" + UUID.randomUUID())
           .with(jwt().jwt(jwt -> jwt.claim("sub", TEST_UID))).contentType("application/json")
           .content(requestBody))
           .andExpect(status().isNotFound());
@@ -217,12 +218,12 @@ public class ExerciseControllerIntegrationTests {
     void shouldReturnNoContentAndDeleteInDB_whenRequestValid() throws Exception {
       // Act
       Exercise toDelete = seededExercises.get(0);
-      mockMvc.perform(delete("/exercises/" + toDelete.getEid())
+      mockMvc.perform(delete("/exercises/" + toDelete.getId())
           .with(jwt().jwt(jwt -> jwt.claim("sub", TEST_UID))))
           .andExpect(status().isNoContent());
 
       // Assert
-      Optional<Exercise> deleted = exerciseRepository.findById(toDelete.getEid());
+      Optional<Exercise> deleted = exerciseRepository.findById(toDelete.getId());
       assertThat(deleted).isEmpty();
     }
   }
@@ -252,7 +253,7 @@ public class ExerciseControllerIntegrationTests {
       String firstCreateResponseBody = firstCreate.andReturn().getResponse().getContentAsString();
       ExerciseResponseDto firstCreateResponse = objectMapper.readValue(firstCreateResponseBody,
           ExerciseResponseDto.class);
-      mockMvc.perform(delete("/exercises/" + firstCreateResponse.getEid())
+      mockMvc.perform(delete("/exercises/" + firstCreateResponse.getId())
           .with(jwt().jwt(jwt -> jwt.claim("sub", thisTestUser))))
           .andExpect(status().isNoContent());
 

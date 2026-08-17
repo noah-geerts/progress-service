@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,8 @@ import com.noahgeerts.progress.repository.ExerciseRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceTests {
+
+  private static final UUID TEST_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
   @Mock
   private ExerciseRepository exerciseRepo;
@@ -64,7 +67,7 @@ public class ExerciseServiceTests {
   public void createExercise_DBFindExistingExercise_throwsConflict() {
     // Arrange
     Optional<Exercise> alreadyExists = Optional
-        .of(Exercise.builder().name("doesn't matter").uid("the uid").eid(0L).build());
+      .of(Exercise.builder().name("doesn't matter").uid("the uid").id(TEST_ID).build());
     when(exerciseRepo.findByNameAndUid("Exercise already exists", "the uid"))
         .thenReturn(alreadyExists);
 
@@ -93,13 +96,13 @@ public class ExerciseServiceTests {
   }
 
   @Test
-  public void updateExercise_DBFindsNoSuchEid_throwsNotFound() {
+  public void updateExercise_DBFindsNoSuchId_throwsNotFound() {
     // Arrange (find by id and uid should return an empty optional)
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.empty());
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
     // Act & Assert (call the method)
     assertThatThrownBy(
-        () -> underTest.updateExercise("uid", ExerciseRequestDto.builder().name("Update name").build(), 0L))
+        () -> underTest.updateExercise("uid", ExerciseRequestDto.builder().name("Update name").build(), TEST_ID))
         .isInstanceOf(ResourceNotFoundException.class);
   }
 
@@ -108,65 +111,65 @@ public class ExerciseServiceTests {
     // Arrange (find by id and uid should return an exercise, but find by name and
     // uid
     // should also find one already)
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.of(new Exercise()));
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(new Exercise()));
     when(exerciseRepo.findByNameAndUid("Updated name", "uid"))
         .thenReturn(Optional.of(Exercise.builder().name("Updated name").uid("uid").build()));
 
     // Act & Assert (call the method)
     assertThatThrownBy(
-        () -> underTest.updateExercise("uid", ExerciseRequestDto.builder().name("Updated name").build(), 0L))
+        () -> underTest.updateExercise("uid", ExerciseRequestDto.builder().name("Updated name").build(), TEST_ID))
         .isInstanceOf(ConflictException.class);
   }
 
   @Test
-  public void updateExercise_EidValidAndNameNotTaken_returnsUpdatedExerciseDto() {
+  public void updateExercise_IdValidAndNameNotTaken_returnsUpdatedExerciseDto() {
     // Arrange (find by id and uid should return an exercise, but find by name and
     // uid shouldn't
-    Exercise updated = Exercise.builder().name("Updated name").eid(0L).build();
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.of(updated));
+    Exercise updated = Exercise.builder().name("Updated name").id(TEST_ID).build();
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(updated));
     when(exerciseRepo.findByNameAndUid("Updated name", "uid"))
         .thenReturn(Optional.empty());
     when(exerciseRepo.save(updated)).thenReturn(updated);
 
     // Act
     ExerciseResponseDto result = underTest.updateExercise("uid",
-        ExerciseRequestDto.builder().name("Updated name").build(), 0L);
+        ExerciseRequestDto.builder().name("Updated name").build(), TEST_ID);
 
     // Assert
-    ExerciseResponseDto expected = ExerciseResponseDto.builder().eid(0L).name("Updated name").build();
+    ExerciseResponseDto expected = ExerciseResponseDto.builder().id(TEST_ID).name("Updated name").build();
     assertThat(result).isEqualTo(expected);
   }
 
   @Test
-  public void deleteExercise_DBFindsNoSuchEid_throwsNotFound() {
-    // Arrange (find by uid and eid should return empty)
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.empty());
+  public void deleteExercise_DBFindsNoSuchId_throwsNotFound() {
+    // Arrange (find by uid and id should return empty)
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
     // Act & Assert
-    assertThatThrownBy(() -> underTest.deleteExercise("uid", 0L)).isInstanceOf(ResourceNotFoundException.class);
+    assertThatThrownBy(() -> underTest.deleteExercise("uid", TEST_ID)).isInstanceOf(ResourceNotFoundException.class);
   }
 
   @Test
   public void deleteExercise_DBThrowsDataIntegrityViolation_throwsUnprocessable() {
-    // Arrange (find by uid and eid should return the old exercise, delete should
+    // Arrange (find by uid and id should return the old exercise, delete should
     // throw a DataIntegrityViolationException)
-    Exercise toDelete = Exercise.builder().name("Updated name").eid(0L).build();
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.of(toDelete));
+    Exercise toDelete = Exercise.builder().name("Updated name").id(TEST_ID).build();
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(toDelete));
     doThrow(new DataIntegrityViolationException("Exercise is still referenced in at least one Performed Exercise"))
         .when(exerciseRepo).delete(toDelete);
 
     // Act & Assert
-    assertThatThrownBy(() -> underTest.deleteExercise("uid", 0L)).isInstanceOf(UnprocessableEntityException.class);
+    assertThatThrownBy(() -> underTest.deleteExercise("uid", TEST_ID)).isInstanceOf(UnprocessableEntityException.class);
   }
 
   @Test
   public void deleteExercise_DBDeletesSuccessfully_throwsNothing() {
-    // Arrange (find by uid and eid should return the old exercise)
-    Exercise toDelete = Exercise.builder().name("Updated name").eid(0L).build();
-    when(exerciseRepo.findByEidAndUid(0L, "uid")).thenReturn(Optional.of(toDelete));
+    // Arrange (find by uid and id should return the old exercise)
+    Exercise toDelete = Exercise.builder().name("Updated name").id(TEST_ID).build();
+    when(exerciseRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(toDelete));
 
     // Act & Assert (as long as nothing is thrown we're good)
-    underTest.deleteExercise("uid", 0L);
+    underTest.deleteExercise("uid", TEST_ID);
     verify(exerciseRepo).delete(toDelete);
   }
 }

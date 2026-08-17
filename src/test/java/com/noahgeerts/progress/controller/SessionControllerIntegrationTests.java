@@ -291,7 +291,7 @@ public class SessionControllerIntegrationTests {
                                         .andExpect(status().isOk())
                                         .andExpect(jsonPath("$.name").value("Chest Day Modified"))
                                         .andExpect(jsonPath("$.date").value("2025-01-01"))
-                                        .andExpect(jsonPath("$.ssid").value(seededSessions.get(0).getSsid()));
+                                        .andExpect(jsonPath("$.id").value(seededSessions.get(0).getId().toString()));
                 }
 
                 @Test

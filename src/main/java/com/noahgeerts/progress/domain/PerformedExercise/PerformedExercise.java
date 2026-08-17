@@ -1,6 +1,7 @@
 package com.noahgeerts.progress.domain.PerformedExercise;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.noahgeerts.progress.domain.Exercise.Exercise;
 import com.noahgeerts.progress.domain.Session.Session;
@@ -28,20 +29,23 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PerformedExercise {
-  @Id //TODO: migrate to UUID
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long peid;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id", nullable = false)
+  private UUID id;
 
   @Column(nullable = false)
   private int position;
 
-  @ManyToOne //TODO: add optional = false
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "session_id", nullable = false)
   private Session session;
 
   @Column(nullable = false)
   private String uid;
 
-  @ManyToOne(fetch = FetchType.EAGER) //TODO: add optional = false
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(name = "exercise_id", nullable = false)
   private Exercise exercise;
 
   @OneToMany(mappedBy = "performedExercise", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

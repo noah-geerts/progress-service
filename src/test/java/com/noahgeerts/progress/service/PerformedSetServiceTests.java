@@ -2,6 +2,7 @@ package com.noahgeerts.progress.service;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,6 +29,8 @@ import com.noahgeerts.progress.repository.PerformedSetRepository;
 @ExtendWith(MockitoExtension.class)
 public class PerformedSetServiceTests {
 
+    private static final UUID TEST_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
+
     @Mock
     private PerformedSetRepository setRepo;
     @Mock
@@ -43,41 +46,41 @@ public class PerformedSetServiceTests {
     @Test
     public void createPerformedSet_AlreadyExists_ThrowsConflict() {
         // Arrange (find set method should return an existing PerformedSet)
-        when(setRepo.findByPerformedExercise_PeidAndPositionAndUid(0L, 0, "uid"))
+        when(setRepo.findByPerformedExercise_IdAndPositionAndUid(TEST_ID, 0, "uid"))
                 .thenReturn(Optional.of(PerformedSet.builder().build()));
 
         // Act & Assert
-        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().peid(0L).position(0).build();
+        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().performedExerciseId(TEST_ID).position(0).build();
         assertThatThrownBy(() -> underTest.createPerformedSet("uid", dto)).isInstanceOf(ConflictException.class);
     }
 
     @Test
-    public void createPerformedSet_InvalidPeid_ThrowsUnprocessable() {
+    public void createPerformedSet_InvalidPerformedExerciseId_ThrowsUnprocessable() {
         // Arrange (find set method returns empty, but peRepo find by id also finds
         // nothing)
-        when(setRepo.findByPerformedExercise_PeidAndPositionAndUid(0L, 0, "uid"))
+        when(setRepo.findByPerformedExercise_IdAndPositionAndUid(TEST_ID, 0, "uid"))
                 .thenReturn(Optional.empty());
-        when(peRepo.findByPeidAndUid(0L, "uid")).thenReturn(Optional.empty());
+        when(peRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
         // Act & Assert
-        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().peid(0L).position(0).build();
+        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().performedExerciseId(TEST_ID).position(0).build();
         assertThatThrownBy(() -> underTest.createPerformedSet("uid", dto)).isInstanceOf(UnprocessableEntityException.class);
     }
 
     @Test
-    public void createPerformedSet_ValidPeidDoesntExist_ReturnsNewEntity() {
+    public void createPerformedSet_ValidPerformedExerciseId_ReturnsNewEntity() {
         // Arrange (find set method returns empty and peRepo find by id returns a valid
         // PerformedExercise)
         PerformedExercise exercise = PerformedExercise.builder().build();
-        when(setRepo.findByPerformedExercise_PeidAndPositionAndUid(0L, 0, "uid"))
+        when(setRepo.findByPerformedExercise_IdAndPositionAndUid(TEST_ID, 0, "uid"))
                 .thenReturn(Optional.empty());
-        when(peRepo.findByPeidAndUid(0L, "uid")).thenReturn(Optional.of(exercise));
+        when(peRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(exercise));
         PerformedSet newExercise = PerformedSet.builder().weight(20.2).reps(10).position(0).uid("uid").performedExercise(exercise)
                 .build();
         when(setRepo.save(newExercise)).thenReturn(newExercise);
 
         // Act
-        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().peid(0L).weight(20.2).reps(10).position(0).build();
+        CreatePerformedSetDto dto = CreatePerformedSetDto.builder().performedExerciseId(TEST_ID).weight(20.2).reps(10).position(0).build();
         PerformedSetResponseDto result = underTest.createPerformedSet("uid", dto);
 
         // Assert6
@@ -88,39 +91,39 @@ public class PerformedSetServiceTests {
     @Test
     public void updatePerformedSet_NoSuchSetExists_ThrowsNotFound() {
         // Arrange (set repo doesn't find the set)
-        when(setRepo.findByStidAndUid(0L, "uid")).thenReturn(Optional.empty());
+        when(setRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
         // Act & Assert
         UpdatePerformedSetDto dto = UpdatePerformedSetDto.builder().build();
-        assertThatThrownBy(() -> underTest.updatePerformedSet("uid", 0L, dto))
+        assertThatThrownBy(() -> underTest.updatePerformedSet("uid", TEST_ID, dto))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
     public void updatePerformedSet_SetExists_UpdatesSuccessfully() {
         // Arrange (set repo does find the set)
-        PerformedSet oldSet = PerformedSet.builder().weight(10.1).position(5).reps(5).stid(0L).build();
-        PerformedSet newSet = PerformedSet.builder().weight(20.2).position(5).reps(10).stid(0L).build();
-        when(setRepo.findByStidAndUid(0L, "uid")).thenReturn(Optional.of(oldSet));
+        PerformedSet oldSet = PerformedSet.builder().weight(10.1).position(5).reps(5).id(TEST_ID).build();
+        PerformedSet newSet = PerformedSet.builder().weight(20.2).position(5).reps(10).id(TEST_ID).build();
+        when(setRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(oldSet));
         when(setRepo.save(newSet)).thenReturn(newSet);
 
         // Act
         UpdatePerformedSetDto dto = UpdatePerformedSetDto.builder().weight(newSet.getWeight()).reps(newSet.getReps())
                 .build();
-        PerformedSetResponseDto result = underTest.updatePerformedSet("uid", 0L, dto);
+        PerformedSetResponseDto result = underTest.updatePerformedSet("uid", TEST_ID, dto);
 
         // Assert
-        PerformedSetResponseDto expected = PerformedSetResponseDto.builder().weight(20.2).position(5).reps(10).stid(0L).build();
+        PerformedSetResponseDto expected = PerformedSetResponseDto.builder().weight(20.2).position(5).reps(10).id(TEST_ID).build();
         assertThat(expected).isEqualTo(result);
     }
 
     @Test
     public void deletePerformedSet_SetDoesntExist_ThrowsNotFound() {
         // Arrange (set repo doesn't find the set)
-        when(setRepo.findByStidAndUid(0L, "uid")).thenReturn(Optional.empty());
+        when(setRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThatThrownBy(() -> underTest.deletePerformedSet("uid", 0L))
+        assertThatThrownBy(() -> underTest.deletePerformedSet("uid", TEST_ID))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -128,11 +131,11 @@ public class PerformedSetServiceTests {
     public void deletePerformedSet_SetExists_DeletesSuccessfully() {
         // Arrange (set repo does find the set)
         PerformedExercise pe = PerformedExercise.builder().position(0).sets(new ArrayList<>()).build();
-        PerformedSet oldSet = PerformedSet.builder().weight(10.1).reps(5).stid(0L).performedExercise(pe).build();
-        when(setRepo.findByStidAndUid(0L, "uid")).thenReturn(Optional.of(oldSet));
+        PerformedSet oldSet = PerformedSet.builder().weight(10.1).reps(5).id(TEST_ID).performedExercise(pe).build();
+        when(setRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(oldSet));
 
         // Act & Assert
-        underTest.deletePerformedSet("uid", 0L);
+        underTest.deletePerformedSet("uid", TEST_ID);
         verify(setRepo).delete(oldSet);
     }
 

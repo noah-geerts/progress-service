@@ -1,5 +1,7 @@
 package com.noahgeerts.progress.domain.PerformedExercise;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,5 +14,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdatePerformedExerciseDto {
   @NotNull
-  private Long eid;
+  private UUID exerciseId;
 }
