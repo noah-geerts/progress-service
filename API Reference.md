@@ -383,6 +383,45 @@ POST /performed-exercises
 - 409 Conflict if there is already a Performed Exercise with the given sessionId and order
 - 422 Unprocessable Entity if the sessionId or exerciseId do not correspond to a valid session or exercise
 
+### Create or Update Performed Exercise by ID
+
+```http
+PUT /performed-exercises/{id}
+```
+
+The path ID must be a UUID chosen by the client. POST continues to generate
+a random UUID in the service.
+
+**Request Body:**
+
+```json
+{
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "exerciseId": "550e8400-e29b-41d4-a716-446655440002",
+  "position": 0
+}
+```
+
+Exactly these three non-null fields are required. Both IDs must be UUIDs;
+`position` must be an integer greater than or equal to zero. Extra fields,
+numeric strings, and decimal positions are rejected.
+
+**Success Responses:**
+
+- 201 Created with a PerformedExerciseResponseDto when the ID is new.
+- 200 OK with a PerformedExerciseResponseDto when the ID exists for the user.
+  Only position is updated; sessionId, exerciseId, and existing sets are preserved.
+  Repeating an identical PUT returns 200 without creating another resource.
+
+**Error Responses:**
+
+- 400 Bad Request for an invalid path ID or body, or an attempt to change
+  sessionId or exerciseId on an existing performed exercise.
+- 409 Conflict if another performed exercise occupies the requested position
+  in the session (on create or update), or the path ID belongs to another user.
+- 422 Unprocessable Entity on create if the session or exercise does not exist
+  for the authenticated user.
+
 ### Update Performed Exercise
 
 ```http
@@ -476,6 +515,60 @@ POST /sets
 
 - 409 Conflict if a Set already exists with the given order and performedExerciseId
 - 422 Unprocessable Entity if the provided performedExerciseId does not correspond to a valid Performed Exercise
+
+### Create or Update PerformedSet by ID
+
+```http
+PUT /sets/{id}
+```
+
+The path ID must be a UUID chosen by the client. POST continues to generate
+a random UUID in the service.
+
+**Request Body:**
+
+```json
+{
+  "performedExerciseId": "550e8400-e29b-41d4-a716-446655440001",
+  "position": 1,
+  "reps": 8,
+  "weight": 225.5
+}
+```
+
+Exactly these four non-null fields are required. `performedExerciseId` must be
+a UUID, `position` an integer greater than or equal to zero, `reps` an integer
+greater than or equal to one, and `weight` a number greater than or equal to zero.
+Extra fields are rejected.
+
+**Success Responses:**
+
+- 201 Created with a PerformedSetResponseDto when a new set is created using the path ID.
+- 200 OK with a PerformedSetResponseDto when the ID exists for the authenticated user.
+  Only weight and reps are updated; performedExerciseId and position must remain unchanged.
+  Repeating an identical PUT returns 200 without creating another set.
+
+**Response:**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440003",
+  "position": 1,
+  "reps": 8,
+  "weight": 225.5
+}
+```
+
+The response ID matches the UUID supplied in the path.
+
+**Error Responses:**
+
+- 400 Bad Request for an invalid path ID or body, or an attempt to change
+  performedExerciseId or position on an existing set.
+- 409 Conflict on create if another set already occupies the requested position
+  in the performed exercise for the authenticated user.
+- 422 Unprocessable Entity on create if the performed exercise does not exist
+  for the authenticated user.
 
 ### Update PerformedSet
 

@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,15 +84,15 @@ public class PerformedExerciseControllerIntegrationTests {
                 // Seed PerformedExercises
                 seededPEs = List.of(
                                 // Bench Press on Chest Day
-                                PerformedExercise.builder().exercise(seededExercises.get(0))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(0))
                                                 .session(seededSessions.get(0))
                                                 .uid(TEST_UID).position(1).build(),
                                 // Dumbell Press on Chest Day
-                                PerformedExercise.builder().exercise(seededExercises.get(1))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(1))
                                                 .session(seededSessions.get(0))
                                                 .uid(TEST_UID).position(2).build(),
                                 // Squat on Leg Day
-                                PerformedExercise.builder().exercise(seededExercises.get(2))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(2))
                                                 .session(seededSessions.get(1))
                                                 .uid(TEST_UID).position(1).build());
                 peRepo.saveAll(seededPEs);
@@ -100,25 +101,25 @@ public class PerformedExerciseControllerIntegrationTests {
                 seededSets = List
                                 .of(
                                                 // Bench 225x5
-                                                PerformedSet.builder().reps(5).weight(225.0)
+                                                PerformedSet.builder().reps(5).weight(225.0).position(0)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Bench 220x5
-                                                PerformedSet.builder().reps(5).weight(220.0)
+                                                PerformedSet.builder().reps(5).weight(220.0).position(1)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Dumbell Press 60sx12
-                                                PerformedSet.builder().reps(12).weight(60.0)
+                                                PerformedSet.builder().reps(12).weight(60.0).position(0)
                                                                 .performedExercise(seededPEs.get(1)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x3
-                                                PerformedSet.builder().reps(3).weight(315.0)
+                                                PerformedSet.builder().reps(3).weight(315.0).position(0)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x2
-                                                PerformedSet.builder().reps(2).weight(315.0)
+                                                PerformedSet.builder().reps(2).weight(315.0).position(1)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build());
+                                                                .id(UUID.randomUUID()).build());
 
                 setRepo.saveAll(seededSets);
         }
@@ -140,6 +141,7 @@ public class PerformedExerciseControllerIntegrationTests {
                         mockMvc.perform(post("/performed-exercises")).andExpect(status().isUnauthorized());
                         mockMvc.perform(patch("/performed-exercises/1234")).andExpect(status().isUnauthorized());
                         mockMvc.perform(delete("/performed-exercises/1234")).andExpect(status().isUnauthorized());
+                        mockMvc.perform(put("/performed-exercises/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
                 }
         }
 
@@ -229,6 +231,209 @@ public class PerformedExerciseControllerIntegrationTests {
                                                         .contentType("application/json")
                                                         .content(requestBody))
                                         .andExpect(status().isBadRequest());
+                }
+
+        }
+
+        @Nested
+        class CreateOrUpdatePerformedExercise {
+                @Test
+                void shouldReturnCreatedAndCreateInDB_whenRequestValidAndDoesNotExistById() throws Exception {
+                        UUID id = UUID.randomUUID();
+                        UUID sessionId = seededSessions.get(0).getId();
+                        UUID exerciseId = seededExercises.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(sessionId).exerciseId(exerciseId).position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isCreated())
+                                        .andExpect(jsonPath("$.id").value(id.toString()))
+                                        .andExpect(jsonPath("$.position").value(0))
+                                        .andExpect(jsonPath("$.exercise.id").value(exerciseId.toString()));
+
+                        PerformedExercise created = peRepo.findById(id).orElseThrow();
+                        assertThat(created.getPosition()).isZero();
+                        assertThat(created.getSession().getId()).isEqualTo(sessionId);
+                        assertThat(created.getExercise().getId()).isEqualTo(exerciseId);
+                        assertThat(created.getUid()).isEqualTo(TEST_UID);
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size() + 1);
+                }
+
+                @Test
+                void shouldReturnOkAndUpdateInDB_whenRequestValidAndExistsById() throws Exception {
+                        UUID id = seededPEs.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.id").value(id.toString()))
+                                        .andExpect(jsonPath("$.position").value(0));
+
+                        PerformedExercise updated = peRepo.findById(id).orElseThrow();
+                        assertThat(updated.getPosition()).isZero();
+                        assertThat(updated.getSession().getId()).isEqualTo(seededSessions.get(0).getId());
+                        assertThat(updated.getExercise().getId()).isEqualTo(seededExercises.get(0).getId());
+                        assertThat(updated.getUid()).isEqualTo(TEST_UID);
+                        assertThat(updated.getSets()).extracting(PerformedSet::getId)
+                                        .containsExactlyInAnyOrder(seededSets.get(0).getId(), seededSets.get(1).getId());
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size());
+                        assertThat(setRepo.count()).isEqualTo(seededSets.size());
+                }
+
+                @Test
+                void shouldReturnOkAndNotDuplicate_whenPutRepeated() throws Exception {
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isCreated());
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.id").value(id.toString()))
+                                        .andExpect(jsonPath("$.position").value(0));
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size() + 1);
+                }
+
+                @Test
+                void shouldReturnUnprocessableAndCreateNothing_whenSessionDoesNotExist() throws Exception {
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(UUID.randomUUID()).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isUnprocessableEntity());
+                        assertThat(peRepo.findById(id)).isEmpty();
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size());
+                }
+
+                @Test
+                void shouldReturnUnprocessableAndCreateNothing_whenExerciseDoesNotExist() throws Exception {
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(UUID.randomUUID())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isUnprocessableEntity());
+                        assertThat(peRepo.findById(id)).isEmpty();
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size());
+                }
+
+                @Test
+                void shouldReturnUnprocessableAndCreateNothing_whenSessionBelongsToAnotherUser() throws Exception {
+                        UUID sessionId = sessionRepo.save(Session.builder().date(LocalDate.of(2025, 1, 3))
+                                        .name("Other session").uid("other_user").build()).getId();
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(sessionId).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isUnprocessableEntity());
+                        assertThat(peRepo.findById(id)).isEmpty();
+                }
+
+                @Test
+                void shouldReturnUnprocessableAndCreateNothing_whenExerciseBelongsToAnotherUser() throws Exception {
+                        UUID exerciseId = exerciseRepo.save(Exercise.builder().name("Other exercise")
+                                        .uid("other_user").build()).getId();
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(exerciseId)
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isUnprocessableEntity());
+                        assertThat(peRepo.findById(id)).isEmpty();
+                }
+
+                @Test
+                void shouldReturnConflictAndPreserveOwner_whenIdBelongsToAnotherUser() throws Exception {
+                        UUID id = seededPEs.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id)
+                                        .with(jwt().jwt(token -> token.claim("sub", "other_user")))
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isConflict());
+                        PerformedExercise unchanged = peRepo.findById(id).orElseThrow();
+                        assertThat(unchanged.getUid()).isEqualTo(TEST_UID);
+                        assertThat(unchanged.getPosition()).isEqualTo(1);
+                        assertThat(unchanged.getSets()).hasSize(2);
+                }
+
+                @Test
+                void shouldReturnConflict_whenCreatingAtOccupiedPosition() throws Exception {
+                        UUID id = UUID.randomUUID();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(1).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isConflict());
+                        assertThat(peRepo.findById(id)).isEmpty();
+                        assertThat(peRepo.count()).isEqualTo(seededPEs.size());
+                }
+
+                @Test
+                void shouldReturnConflictAndNotUpdate_whenMovingToOccupiedPosition() throws Exception {
+                        UUID id = seededPEs.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(2).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isConflict());
+                        assertThat(peRepo.findById(id).orElseThrow().getPosition()).isEqualTo(1);
+                }
+
+                @Test
+                void shouldReturnBadRequestAndNotUpdate_whenSessionIsAlteredAndExistsById() throws Exception {
+                        UUID id = seededPEs.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(1).getId()).exerciseId(seededExercises.get(0).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isBadRequest());
+                        PerformedExercise unchanged = peRepo.findById(id).orElseThrow();
+                        assertThat(unchanged.getPosition()).isEqualTo(1);
+                        assertThat(unchanged.getSession().getId()).isEqualTo(seededSessions.get(0).getId());
+                        assertThat(unchanged.getExercise().getId()).isEqualTo(seededExercises.get(0).getId());
+                }
+
+                @Test
+                void shouldReturnBadRequestAndNotUpdate_whenExerciseIsAlteredAndExistsById() throws Exception {
+                        UUID id = seededPEs.get(0).getId();
+                        String requestBody = objectMapper.writeValueAsString(CreatePerformedExerciseDto.builder()
+                                        .sessionId(seededSessions.get(0).getId()).exerciseId(seededExercises.get(1).getId())
+                                        .position(0).build());
+
+                        mockMvc.perform(put("/performed-exercises/" + id).with(createTestJWT())
+                                        .contentType("application/json").content(requestBody))
+                                        .andExpect(status().isBadRequest());
+                        PerformedExercise unchanged = peRepo.findById(id).orElseThrow();
+                        assertThat(unchanged.getPosition()).isEqualTo(1);
+                        assertThat(unchanged.getSession().getId()).isEqualTo(seededSessions.get(0).getId());
+                        assertThat(unchanged.getExercise().getId()).isEqualTo(seededExercises.get(0).getId());
                 }
 
         }
