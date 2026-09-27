@@ -3,6 +3,7 @@ package com.noahgeerts.progress.controller;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -96,26 +97,26 @@ public class SessionControllerIntegrationTests {
                                                 // Bench 225x5
                                                 PerformedSet.builder().reps(5).weight(225.0)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .position(1)
+                                                                 .id(UUID.randomUUID()).position(1)
                                                                 .build(),
                                                 // Bench 220x4
                                                 PerformedSet.builder().reps(4).weight(220.0)
                                                                 .performedExercise(seededPEs.get(0)).position(2)
-                                                                .uid(TEST_UID)
+                                                                 .id(UUID.randomUUID()).uid(TEST_UID)
                                                                 .build(),
                                                 // Dumbell Press 60sx12
                                                 PerformedSet.builder().reps(12).weight(60.0)
                                                                 .performedExercise(seededPEs.get(1)).position(1)
-                                                                .uid(TEST_UID)
+                                                                 .id(UUID.randomUUID()).uid(TEST_UID)
                                                                 .build(),
                                                 // Squat 315x3
                                                 PerformedSet.builder().reps(3).weight(315.0)
                                                                 .performedExercise(seededPEs.get(2)).position(2)
-                                                                .uid(TEST_UID)
+                                                                 .id(UUID.randomUUID()).uid(TEST_UID)
                                                                 .build(),
                                                 // Squat 315x2
                                                 PerformedSet.builder().reps(2).weight(315.0)
-                                                                .performedExercise(seededPEs.get(2)).position(1)
+                                                                 .id(UUID.randomUUID()).performedExercise(seededPEs.get(2)).position(1)
                                                                 .uid(TEST_UID)
                                                                 .build());
 

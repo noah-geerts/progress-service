@@ -22,8 +22,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
@@ -102,23 +104,23 @@ public class PerformedSetControllerIntegrationTests {
                                                 // Bench 225x5
                                                 PerformedSet.builder().reps(5).weight(225.0).position(0)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Bench 220x5
                                                 PerformedSet.builder().reps(5).weight(220.0).position(1)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Dumbell Press 60sx12
                                                 PerformedSet.builder().reps(12).weight(60.0).position(0)
                                                                 .performedExercise(seededPEs.get(1)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x3
                                                 PerformedSet.builder().reps(3).weight(315.0).position(0)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x2
                                                 PerformedSet.builder().reps(2).weight(315.0).position(1)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build());
+                                                                .id(UUID.randomUUID()).build());
 
                 setRepo.saveAll(seededSets);
         }
@@ -250,6 +252,189 @@ public class PerformedSetControllerIntegrationTests {
                                         .content(requestBody))
                                         .andExpect(status().isBadRequest());
                 }
+        }
+
+        @Nested 
+        class CreateOrUpdatePerformedSet {
+                @Test
+                void shouldReturnCreatedAndCreateInDB_whenRequestValidAndDoesNotExistById() throws Exception {
+                        // Arrange
+                        UUID toCreateId = UUID.randomUUID();
+                        UUID performedExerciseId = seededPEs.get(0).getId(); // bench press
+                        int position = 2; // not used yet (bench has 2 sets in seed data, 0 and 1)
+                        int reps = 3;
+                        double weight = 215.0;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toCreateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.position").value(position))
+                                .andExpect(jsonPath("$.reps").value(reps))
+                                .andExpect(jsonPath("$.weight").value(weight))
+                                .andReturn();
+
+                        // Assert (make sure it was created)
+                        Optional<PerformedSet> created = setRepo.findById(toCreateId);
+                        assertThat(created).isNotEmpty();
+                        assertThat(created.get().getPerformedExercise().getId()).isEqualTo(performedExerciseId);
+                        assertThat(created.get().getPosition()).isEqualTo(position);
+                        assertThat(created.get().getReps()).isEqualTo(reps);
+                        assertThat(created.get().getWeight()).isEqualTo(weight);
+                }
+
+                @Test
+                void shouldReturnUnprocessableAndCreateNothing_whenPEIdDoesntExistAndDoesntExistById() throws Exception {
+                        // Arrange
+                        UUID toCreateId = UUID.randomUUID();
+                        UUID performedExerciseId =  UUID.randomUUID(); // nonexistent PE
+                        int position = 2; // not used yet (bench has 2 sets in seed data, 0 and 1)
+                        int reps = 3;
+                        double weight = 215.0;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toCreateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isUnprocessableEntity())
+                                .andExpect(content().string(""))
+                                .andReturn();
+
+                        // Assert (make sure nothing was created)
+                        Optional<PerformedSet> created = setRepo.findById(toCreateId);
+                        assertThat(created).isEmpty();
+                }
+
+                @Test
+                void shouldReturnConflictAndCreateNothing_whenPositionAndPEIdUsedAndDoesntExistById() throws Exception {
+                        // Arrange
+                        UUID toCreateId = UUID.randomUUID();
+                        UUID performedExerciseId = seededPEs.get(0).getId(); // bench press
+                        int position = 1; // conflicting position used on this bench press
+                        int reps = 3;
+                        double weight = 215.0;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toCreateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isConflict())
+                                .andExpect(content().string(""))
+                                .andReturn();
+
+                        // Assert (make sure nothing was created)
+                        Optional<PerformedSet> created = setRepo.findById(toCreateId);
+                        assertThat(created).isEmpty();
+                }
+
+                @Test
+                void shouldReturnOkAndUpdateInDB_whenRequestValidAndExistsById() throws Exception {
+                        // Arrange
+                        UUID toUpdateId = seededSets.get(0).getId(); // first set of bench below
+                        UUID performedExerciseId = seededSets.get(0).getPerformedExercise().getId(); // bench press (existing PE)
+                        int position = seededSets.get(0).getPosition(); // existing position
+                        int reps = 12;
+                        double weight = 197.7;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toUpdateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.position").value(position))
+                                .andExpect(jsonPath("$.reps").value(reps))
+                                .andExpect(jsonPath("$.weight").value(weight))
+                                .andReturn();
+
+                        // Assert (make sure it was updated)
+                        Optional<PerformedSet> updated = setRepo.findById(toUpdateId);
+                        assertThat(updated).isNotEmpty();
+                        assertThat(updated.get().getPerformedExercise().getId()).isEqualTo(performedExerciseId);
+                        assertThat(updated.get().getPosition()).isEqualTo(position);
+                        assertThat(updated.get().getReps()).isEqualTo(reps);
+                        assertThat(updated.get().getWeight()).isEqualTo(weight);
+                }
+
+                @Test
+                void shouldReturnBadRequestAndNotUpdate_whenPEIsAlteredAndExistsById() throws Exception {
+                        // Arrange
+                        PerformedSet toUpdate = seededSets.get(0);
+                        UUID toUpdateId = toUpdate.getId(); // first set of bench
+                        UUID performedExerciseId = UUID.randomUUID(); // we try to update the PE (not allowed)
+                        int position = 0; // existing position
+                        int reps = 12;
+                        double weight = 197.7;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toUpdateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(content().string(""))
+                                .andReturn();
+
+                        // Assert (make sure it was not updated)
+                        Optional<PerformedSet> original = setRepo.findById(toUpdateId);
+                        assertThat(original).isNotEmpty();
+                        assertThat(original.get().getPerformedExercise().getId()).isEqualTo(toUpdate.getPerformedExercise().getId());
+                        assertThat(original.get().getPosition()).isEqualTo(toUpdate.getPosition());
+                        assertThat(original.get().getReps()).isEqualTo(toUpdate.getReps());
+                        assertThat(original.get().getWeight()).isEqualTo(toUpdate.getWeight());
+                }
+
+                @Test
+                void shouldReturnBadRequestAndNotUpdate_whenPositionIsAlteredAndExistsById() throws Exception {
+                        // Arrange
+                        PerformedSet toUpdate = seededSets.get(0);
+                        UUID toUpdateId = toUpdate.getId(); // first set of bench
+                        UUID performedExerciseId = seededPEs.get(0).getId(); // existing PE (bench press)
+                        int position = 99; // we try to change the position
+                        int reps = 12;
+                        double weight = 197.7;
+
+                        String requestBody = objectMapper.writeValueAsString(
+                                        CreatePerformedSetDto.builder().performedExerciseId(performedExerciseId).position(position).reps(reps)
+                                                        .weight(weight).build());
+
+                        // Act
+                        mockMvc
+                                .perform(put("/sets/" + toUpdateId.toString()).with(createTestJWT()).contentType("application/json")
+                                                .content(requestBody))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(content().string(""))
+                                .andReturn();
+
+                        // Assert (make sure it was not updated)
+                        Optional<PerformedSet> original = setRepo.findById(toUpdateId);
+                        assertThat(original).isNotEmpty();
+                        assertThat(original.get().getPerformedExercise().getId()).isEqualTo(toUpdate.getPerformedExercise().getId());
+                        assertThat(original.get().getPosition()).isEqualTo(toUpdate.getPosition());
+                        assertThat(original.get().getReps()).isEqualTo(toUpdate.getReps());
+                        assertThat(original.get().getWeight()).isEqualTo(toUpdate.getWeight());
+                }
+
+                // No test for validating the dto because it uses the same DTO as CreatePerformedSet, which is tested there
         }
 
         @Nested

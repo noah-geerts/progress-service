@@ -100,25 +100,25 @@ public class PerformedExerciseControllerIntegrationTests {
                 seededSets = List
                                 .of(
                                                 // Bench 225x5
-                                                PerformedSet.builder().reps(5).weight(225.0)
+                                                PerformedSet.builder().reps(5).weight(225.0).position(0)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Bench 220x5
-                                                PerformedSet.builder().reps(5).weight(220.0)
+                                                PerformedSet.builder().reps(5).weight(220.0).position(1)
                                                                 .performedExercise(seededPEs.get(0)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Dumbell Press 60sx12
-                                                PerformedSet.builder().reps(12).weight(60.0)
+                                                PerformedSet.builder().reps(12).weight(60.0).position(0)
                                                                 .performedExercise(seededPEs.get(1)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x3
-                                                PerformedSet.builder().reps(3).weight(315.0)
+                                                PerformedSet.builder().reps(3).weight(315.0).position(0)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build(),
+                                                                .id(UUID.randomUUID()).build(),
                                                 // Squat 315x2
-                                                PerformedSet.builder().reps(2).weight(315.0)
+                                                PerformedSet.builder().reps(2).weight(315.0).position(1)
                                                                 .performedExercise(seededPEs.get(2)).uid(TEST_UID)
-                                                                .build());
+                                                                .id(UUID.randomUUID()).build());
 
                 setRepo.saveAll(seededSets);
         }
