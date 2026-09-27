@@ -26,24 +26,12 @@ public class ExerciseService {
     this.mapper = mapper;
   }
 
-  /**
-   * @param uid
-   * @return all exercises for the given user, sorted alphabetically
-   */
   public List<ExerciseResponseDto> getAllExercises(String uid) {
     Iterable<Exercise> result = exerciseRepo.findAllByUidOrderByNameAsc(uid);
     return StreamSupport.stream(result.spliterator(), false)
         .map(exercise -> mapper.map(exercise, ExerciseResponseDto.class)).toList();
   }
 
-  /**
-   * 
-   * @param uid
-   * @param dto
-   * @return the exercise just created under the given user
-   * @throws ConflictException if an exercise already exists with the name
-   *                           provided in the dto
-   */
   public ExerciseResponseDto createExercise(String uid, ExerciseRequestDto dto) {
     // Check if an exercise with that name already exists
     Optional<Exercise> existing = exerciseRepo.findByNameAndUid(dto.getName(), uid);
@@ -56,15 +44,6 @@ public class ExerciseService {
     return mapper.map(created, ExerciseResponseDto.class);
   }
 
-  /**
-   * Updates the name of the exercise
-   * 
-  * @param id
-   * @throws ResourceNotFoundException if the exercise does not exist for the
-   *                                   given user
-   * @throws ConflictException         if an exercise already exists with the name
-   *                                   provided in the dto
-   */
   public ExerciseResponseDto updateExercise(String uid, ExerciseRequestDto dto, UUID id) {
     // Check if the exercise exists by id
     Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(id, uid);
@@ -83,15 +62,6 @@ public class ExerciseService {
     return mapper.map(updatedExercise, ExerciseResponseDto.class);
   }
 
-  /**
-   * Deletes the exercise
-   * 
-  * @param id
-   * @throws ResourceNotFoundException    if the exercise does not exist for the
-   *                                      given user
-   * @throws UnprocessableEntityException if the exercise is being referenced in
-   *                                      Performed Exercises
-   */
   public void deleteExercise(String uid, UUID id) {
     // Check if the exercise exists by id
     Optional<Exercise> existingById = exerciseRepo.findByIdAndUid(id, uid);

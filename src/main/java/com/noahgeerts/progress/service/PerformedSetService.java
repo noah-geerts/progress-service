@@ -29,18 +29,6 @@ public class PerformedSetService {
     this.mapper = mapper;
   }
 
-  /**
-   * 
-   * @param uid
-   * @param dto
-   * @return The newly created PerformedSet entity
-   * @throws ConflictException            if a set already exists with the
-   *                                      provided position
-   *                                      and performed exercise for the given
-   *                                      user
-  * @throws UnprocessableEntityException if the provided performed exercise id does not correspond
-   *                                      to a valid PerformedExercise
-   */
   public PerformedSetResponseDto createPerformedSet(String uid, CreatePerformedSetDto dto) {
     // Check if the performedSet already exists
     Optional<PerformedSet> existing = setRepo.findByPerformedExercise_IdAndPositionAndUid(dto.getPerformedExerciseId(),
@@ -62,14 +50,6 @@ public class PerformedSetService {
     return mapper.map(created, PerformedSetResponseDto.class);
   }
 
-  /**
-   * 
-   * @param uid
-   * @param dto
-   * @return The updated PerformedSet entity
-   * @throws ResourceNotFoundException if there is no PerformedSet with the given
-  *                                   id for the current user
-   */
   public PerformedSetResponseDto updatePerformedSet(String uid, UUID id, UpdatePerformedSetDto dto) {
     // Check if it exists
     Optional<PerformedSet> existing = setRepo.findByIdAndUid(id, uid);
@@ -84,14 +64,6 @@ public class PerformedSetService {
     return mapper.map(newSet, PerformedSetResponseDto.class);
   }
 
-  /**
-   * Deletes the PerformedSet by id if it belongs to the user
-   * 
-   * @param uid
-   * @param dto
-   * @throws ResourceNotFoundException if there is no PerformedSet with the given
-  *                                   id for the current user
-   */
   public void deletePerformedSet(String uid, UUID id) {
     // Check if it exists
     Optional<PerformedSet> existing = setRepo.findByIdAndUid(id, uid);

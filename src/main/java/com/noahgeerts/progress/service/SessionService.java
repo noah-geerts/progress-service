@@ -28,14 +28,6 @@ public class SessionService {
     this.mapper = mapper;
   }
 
-  /**
-   * 
-   * @param uid
-   * @param date
-   * @return The requested Session
-   * @throws ResourceNotFoundException if there is no session on that date for the
-   *                                   given user
-   */
   public SessionResponseDto getSession(String uid, LocalDate date) {
     // Check that session exists
     Optional<Session> existing = sessionRepo.findByDateAndUid(date, uid);
@@ -59,13 +51,6 @@ public class SessionService {
     return mapper.map(session, SessionResponseDto.class);
   }
 
-  /**
-   * 
-   * @param uid
-   * @param date
-   * @return A List of the sessions for the desired month (gets sessions for all
-   *         days in the month that the provided date falls in)
-   */
   public List<SessionResponseDto> getMonthlySessions(String uid, LocalDate date) {
     // Get the first day of the month
     LocalDate firstDayOfMonth = date.withDayOfMonth(1);
@@ -90,14 +75,6 @@ public class SessionService {
     return output;
   }
 
-  /**
-   * 
-   * @param uid
-   * @param date
-   * @param dto
-   * @return
-   * @throws ConflictException if there is already a session on the given date
-   */
   public SessionResponseDto createSession(String uid, LocalDate date, SessionRequestDto dto) {
     // Check if the session already exists
     Optional<Session> session = sessionRepo.findByDateAndUid(date, uid);

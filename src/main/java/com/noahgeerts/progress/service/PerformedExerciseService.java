@@ -35,17 +35,6 @@ public class PerformedExerciseService {
     this.mapper = mapper;
   }
 
-  /**
-   * 
-   * @param uid
-   * @param dto
-   * @return The newly created PerformedExercise
-   * @throws ConflictException            if a PerformedExercise already exists
-   *                                      with the
-  *                                      provided position and session id
-  * @throws UnprocessableEntityException if the session id or exercise id do not correspond to
-   *                                      a valid session or exercise
-   */
   public PerformedExerciseResponseDto createPerformedExercise(String uid, CreatePerformedExerciseDto dto) {
     // Check if it already exists
     Optional<PerformedExercise> existingPE = peRepo.findBySession_IdAndPositionAndUid(dto.getSessionId(),
@@ -66,15 +55,6 @@ public class PerformedExerciseService {
     return mapper.map(created, PerformedExerciseResponseDto.class);
   }
 
-  /**
-   * 
-   * @param uid
-   * @param dto
-   * @return The updated PerformedExercise
-   * @throws UnprocessableEntityException if the exercise id does not correspond
-   *                                      to a valid exercise
-   * @throws ResourceNotFoundException    if the exercise does not exist
-   */
   public PerformedExerciseResponseDto updatePerformedExercise(String uid, UUID id, UpdatePerformedExerciseDto dto) {
     // Make sure it exists
     Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(id, uid);
@@ -94,13 +74,6 @@ public class PerformedExerciseService {
     return mapper.map(result, PerformedExerciseResponseDto.class);
   }
 
-  /**
-  * Deletes the PerformedExercise by id
-   * 
-   * @param uid
-  * @param id
-   * @throws ResourceNotFoundException if the PerformedExercise does not exist
-   */
   public void deletePerformedExercise(String uid, UUID id) {
     // Make sure it exists
     Optional<PerformedExercise> existingPE = peRepo.findByIdAndUid(id, uid);
