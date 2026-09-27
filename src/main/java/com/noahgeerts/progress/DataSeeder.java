@@ -88,6 +88,7 @@ public class DataSeeder {
       ArrayList<PerformedSet> performedSets = new ArrayList<>();
       for (int i = 0; i < sets.length; i++) {
         PerformedSet set = PerformedSet.builder()
+            .id(java.util.UUID.randomUUID())
             .position(i)
             .weight(sets[i][0])
             .reps(sets[i][1])
@@ -98,6 +99,7 @@ public class DataSeeder {
 
       // Create performed exercise
       PerformedExercise performedExercise = PerformedExercise.builder()
+          .id(java.util.UUID.randomUUID())
           .position(0)
           .exercise(exercise)
           .uid(TEST_UID)

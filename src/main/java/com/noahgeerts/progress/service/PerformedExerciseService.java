@@ -4,6 +4,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.noahgeerts.progress.domain.Exercise.Exercise;
@@ -12,6 +14,7 @@ import com.noahgeerts.progress.domain.PerformedExercise.PerformedExercise;
 import com.noahgeerts.progress.domain.PerformedExercise.PerformedExerciseResponseDto;
 import com.noahgeerts.progress.domain.PerformedExercise.UpdatePerformedExerciseDto;
 import com.noahgeerts.progress.domain.Session.Session;
+import com.noahgeerts.progress.exceptions.BadRequestException;
 import com.noahgeerts.progress.exceptions.ConflictException;
 import com.noahgeerts.progress.exceptions.ResourceNotFoundException;
 import com.noahgeerts.progress.exceptions.UnprocessableEntityException;
@@ -36,6 +39,10 @@ public class PerformedExerciseService {
   }
 
   public PerformedExerciseResponseDto createPerformedExercise(String uid, CreatePerformedExerciseDto dto) {
+    return createPerformedExercise(uid, UUID.randomUUID(), dto);
+  }
+
+  private PerformedExerciseResponseDto createPerformedExercise(String uid, UUID id, CreatePerformedExerciseDto dto) {
     // Check if it already exists
     Optional<PerformedExercise> existingPE = peRepo.findBySession_IdAndPositionAndUid(dto.getSessionId(),
         dto.getPosition(), uid);
@@ -49,10 +56,33 @@ public class PerformedExerciseService {
       throw new UnprocessableEntityException("The session id or exercise id provided for the PerformedExercise is invalid");
 
     // Create the new PerformedExercise
-    PerformedExercise newPE = PerformedExercise.builder().session(existingSession.get())
+    PerformedExercise newPE = PerformedExercise.builder().id(id).session(existingSession.get())
         .exercise(existingExercise.get()).position(dto.getPosition()).uid(uid).build();
     PerformedExercise created = peRepo.save(newPE);
     return mapper.map(created, PerformedExerciseResponseDto.class);
+  }
+
+  public ResponseEntity<PerformedExerciseResponseDto> createOrUpdatePerformedExercise(String uid, UUID id,
+      CreatePerformedExerciseDto dto) {
+    Optional<PerformedExercise> existing = peRepo.findByIdAndUid(id, uid);
+    if (existing.isEmpty()) {
+      if (peRepo.existsById(id))
+        throw new ConflictException("The provided performed exercise id is unavailable");
+      return ResponseEntity.status(HttpStatus.CREATED).body(createPerformedExercise(uid, id, dto));
+    }
+
+    PerformedExercise performedExercise = existing.get();
+    if (!performedExercise.getSession().getId().equals(dto.getSessionId())
+        || !performedExercise.getExercise().getId().equals(dto.getExerciseId()))
+      throw new BadRequestException("sessionId and exerciseId may not be updated on a PerformedExercise after creation");
+
+    Optional<PerformedExercise> positionOwner = peRepo.findBySession_IdAndPositionAndUid(dto.getSessionId(),
+        dto.getPosition(), uid);
+    if (positionOwner.isPresent() && !positionOwner.get().getId().equals(id))
+      throw new ConflictException("PerformedExercise with the given session id and position already exist for this user");
+
+    return ResponseEntity.ok(updateExistingPerformedExercise(performedExercise,
+      performedExercise.getExercise(), dto.getPosition()));
   }
 
   public PerformedExerciseResponseDto updatePerformedExercise(String uid, UUID id, UpdatePerformedExerciseDto dto) {
@@ -69,8 +99,14 @@ public class PerformedExerciseService {
 
     // Update the PerformedExercise
     PerformedExercise updated = existingPE.get();
-    updated.setExercise(newExercise.get());
-    PerformedExercise result = peRepo.save(updated);
+    return updateExistingPerformedExercise(updated, newExercise.get(), updated.getPosition());
+  }
+
+  private PerformedExerciseResponseDto updateExistingPerformedExercise(PerformedExercise performedExercise,
+      Exercise exercise, int position) {
+    performedExercise.setExercise(exercise);
+    performedExercise.setPosition(position);
+    PerformedExercise result = peRepo.save(performedExercise);
     return mapper.map(result, PerformedExerciseResponseDto.class);
   }
 

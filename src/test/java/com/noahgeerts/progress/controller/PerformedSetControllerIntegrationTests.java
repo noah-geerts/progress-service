@@ -85,15 +85,15 @@ public class PerformedSetControllerIntegrationTests {
                 // Seed PerformedExercises
                 seededPEs = List.of(
                                 // Bench Press on Chest Day
-                                PerformedExercise.builder().exercise(seededExercises.get(0))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(0))
                                                 .session(seededSessions.get(0))
                                                 .uid(TEST_UID).position(1).build(),
                                 // Dumbell Press on Chest Day
-                                PerformedExercise.builder().exercise(seededExercises.get(1))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(1))
                                                 .session(seededSessions.get(0))
                                                 .uid(TEST_UID).position(2).build(),
                                 // Squat on Leg Day
-                                PerformedExercise.builder().exercise(seededExercises.get(2))
+                                PerformedExercise.builder().id(UUID.randomUUID()).exercise(seededExercises.get(2))
                                                 .session(seededSessions.get(1))
                                                 .uid(TEST_UID).position(1).build());
                 peRepo.saveAll(seededPEs);

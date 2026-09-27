@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -251,7 +250,7 @@ public class PerformedSetServiceTests {
     @Test
     public void deletePerformedSet_SetExists_DeletesSuccessfully() {
         // Arrange (set repo does find the set)
-        PerformedExercise pe = PerformedExercise.builder().position(0).sets(new ArrayList<>()).build();
+        PerformedExercise pe = PerformedExercise.builder().id(TEST_ID).position(0).sets(new ArrayList<>()).build();
         PerformedSet oldSet = PerformedSet.builder().weight(10.1).reps(5).id(TEST_ID).performedExercise(pe).build();
         when(setRepo.findByIdAndUid(TEST_ID, "uid")).thenReturn(Optional.of(oldSet));
 

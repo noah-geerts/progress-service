@@ -5,22 +5,29 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 
 import com.noahgeerts.progress.domain.Exercise.Exercise;
 import com.noahgeerts.progress.domain.PerformedExercise.CreatePerformedExerciseDto;
 import com.noahgeerts.progress.domain.PerformedExercise.PerformedExercise;
+import com.noahgeerts.progress.domain.PerformedExercise.PerformedExerciseResponseDto;
 import com.noahgeerts.progress.domain.PerformedExercise.UpdatePerformedExerciseDto;
 import com.noahgeerts.progress.domain.Session.Session;
+import com.noahgeerts.progress.exceptions.BadRequestException;
 import com.noahgeerts.progress.exceptions.ConflictException;
 import com.noahgeerts.progress.exceptions.ResourceNotFoundException;
 import com.noahgeerts.progress.exceptions.UnprocessableEntityException;
@@ -66,7 +73,7 @@ public class PerformedExerciseServiceTests {
     }
 
     private PerformedExercise createTestPerformedExercise() {
-        return PerformedExercise.builder().position(TEST_PE_POSITION).uid(TEST_UID)
+        return PerformedExercise.builder().id(TEST_PERFORMED_EXERCISE_ID).position(TEST_PE_POSITION).uid(TEST_UID)
                 .session(createTestSession()).exercise(createTestExercise()).build();
     }
 
@@ -124,14 +131,159 @@ public class PerformedExerciseServiceTests {
             when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
             when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
 
-            PerformedExercise testPE = createTestPerformedExercise();
-            when(peRepo.save(testPE)).thenReturn(testPE);
+            when(peRepo.save(any(PerformedExercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // Act
             CreatePerformedExerciseDto dto = CreatePerformedExerciseDto.builder().exerciseId(TEST_EXERCISE_ID).sessionId(TEST_SESSION_ID)
                     .position(TEST_PE_POSITION).build();
-            underTest.createPerformedExercise(TEST_UID, dto);
-            verify(peRepo).save(testPE);
+            PerformedExerciseResponseDto result = underTest.createPerformedExercise(TEST_UID, dto);
+            ArgumentCaptor<PerformedExercise> saved = ArgumentCaptor.forClass(PerformedExercise.class);
+            verify(peRepo).save(saved.capture());
+            assertThat(saved.getValue().getId()).isNotNull();
+            assertThat(result.getId()).isEqualTo(saved.getValue().getId());
+            assertThat(saved.getValue()).usingRecursiveComparison().ignoringFields("id")
+                    .isEqualTo(createTestPerformedExercise());
+        }
+    }
+
+    @Nested
+    class CreateOrUpdatePerformedExercise {
+        private CreatePerformedExerciseDto createDto() {
+            return CreatePerformedExerciseDto.builder().sessionId(TEST_SESSION_ID).exerciseId(TEST_EXERCISE_ID)
+                    .position(TEST_PE_POSITION).build();
+        }
+
+        @Test
+        void shouldCreateWithProvidedId_whenNotFound() {
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
+            when(peRepo.save(any(PerformedExercise.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            var result = underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, createDto());
+
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            assertThat(result.getBody().getId()).isEqualTo(TEST_PERFORMED_EXERCISE_ID);
+            assertThat(result.getBody().getPosition()).isEqualTo(TEST_PE_POSITION);
+            assertThat(result.getBody().getExercise().getId()).isEqualTo(TEST_EXERCISE_ID);
+            verify(peRepo).save(createTestPerformedExercise());
+        }
+
+        @Test
+        void shouldThrowUnprocessable_whenSessionNotOwnedOrMissing() {
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(createTestExercise()));
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, createDto()))
+                    .isInstanceOf(UnprocessableEntityException.class);
+            verify(peRepo, never()).save(any());
+        }
+
+        @Test
+        void shouldThrowUnprocessable_whenExerciseNotOwnedOrMissing() {
+            when(sessionRepo.findByIdAndUid(TEST_SESSION_ID, TEST_UID)).thenReturn(Optional.of(createTestSession()));
+            when(exerciseRepo.findByIdAndUid(TEST_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, createDto()))
+                    .isInstanceOf(UnprocessableEntityException.class);
+            verify(peRepo, never()).save(any());
+        }
+
+        @Test
+        void shouldThrowConflict_whenCreatingAtOccupiedPosition() {
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
+                    .thenReturn(Optional.of(createTestPerformedExercise()));
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, UUID.randomUUID(), createDto()))
+                    .isInstanceOf(ConflictException.class);
+            verify(peRepo, never()).save(any());
+        }
+
+        @Test
+        void shouldThrowConflict_whenIdBelongsToAnotherUser() {
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.empty());
+            when(peRepo.existsById(TEST_PERFORMED_EXERCISE_ID)).thenReturn(true);
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, createDto()))
+                    .isInstanceOf(ConflictException.class);
+            verify(peRepo, never()).save(any());
+        }
+
+        @Test
+        void shouldUpdatePosition_whenFound() {
+            PerformedExercise existing = createTestPerformedExercise();
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(existing));
+            when(peRepo.save(existing)).thenReturn(existing);
+            CreatePerformedExerciseDto dto = createDto();
+            dto.setPosition(0);
+
+            var result = underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto);
+
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(result.getBody().getId()).isEqualTo(TEST_PERFORMED_EXERCISE_ID);
+            assertThat(result.getBody().getPosition()).isZero();
+            assertThat(existing).usingRecursiveComparison().ignoringFields("position").isEqualTo(createTestPerformedExercise());
+            verify(peRepo).save(existing);
+        }
+
+        @Test
+        void shouldReturnOk_whenRequestRepeated() {
+            PerformedExercise existing = createTestPerformedExercise();
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(existing));
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, TEST_PE_POSITION, TEST_UID))
+                    .thenReturn(Optional.of(existing));
+            when(peRepo.save(existing)).thenReturn(existing);
+
+            var result = underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, createDto());
+
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(result.getBody().getPosition()).isEqualTo(TEST_PE_POSITION);
+            verify(peRepo).save(existing);
+        }
+
+        @Test
+        void shouldThrowBadRequest_whenSessionChanged() {
+            PerformedExercise existing = createTestPerformedExercise();
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(existing));
+            CreatePerformedExerciseDto dto = createDto();
+            dto.setSessionId(UUID.randomUUID());
+            dto.setPosition(0);
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto))
+                    .isInstanceOf(BadRequestException.class);
+            verify(peRepo, never()).save(any());
+            assertThat(existing).isEqualTo(createTestPerformedExercise());
+        }
+
+        @Test
+        void shouldThrowBadRequest_whenExerciseChanged() {
+            PerformedExercise existing = createTestPerformedExercise();
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(existing));
+            CreatePerformedExerciseDto dto = createDto();
+            dto.setExerciseId(UUID.randomUUID());
+            dto.setPosition(0);
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto))
+                    .isInstanceOf(BadRequestException.class);
+            verify(peRepo, never()).save(any());
+            assertThat(existing).isEqualTo(createTestPerformedExercise());
+        }
+
+        @Test
+        void shouldThrowConflict_whenUpdatingToOccupiedPosition() {
+            PerformedExercise existing = createTestPerformedExercise();
+            PerformedExercise other = createTestPerformedExercise();
+            other.setId(UUID.randomUUID());
+            other.setPosition(0);
+            when(peRepo.findByIdAndUid(TEST_PERFORMED_EXERCISE_ID, TEST_UID)).thenReturn(Optional.of(existing));
+            when(peRepo.findBySession_IdAndPositionAndUid(TEST_SESSION_ID, 0, TEST_UID)).thenReturn(Optional.of(other));
+            CreatePerformedExerciseDto dto = createDto();
+            dto.setPosition(0);
+
+            assertThatThrownBy(() -> underTest.createOrUpdatePerformedExercise(TEST_UID, TEST_PERFORMED_EXERCISE_ID, dto))
+                    .isInstanceOf(ConflictException.class);
+            verify(peRepo, never()).save(any());
+            assertThat(existing).isEqualTo(createTestPerformedExercise());
         }
     }
 

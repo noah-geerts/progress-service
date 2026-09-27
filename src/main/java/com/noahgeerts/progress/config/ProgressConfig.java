@@ -21,7 +21,8 @@ public class ProgressConfig {
   public Jackson2ObjectMapperBuilderCustomizer strictJacksonCustomizer() {
     return builder -> builder.postConfigurer(mapper -> {
       mapper.coercionConfigFor(LogicalType.Integer)
-          .setCoercion(CoercionInputShape.String, CoercionAction.Fail);
+          .setCoercion(CoercionInputShape.String, CoercionAction.Fail)
+          .setCoercion(CoercionInputShape.Float, CoercionAction.Fail);
       mapper.coercionConfigFor(LogicalType.Float)
           .setCoercion(CoercionInputShape.String, CoercionAction.Fail);
       mapper.coercionConfigFor(LogicalType.Textual)
