@@ -7,7 +7,7 @@ Note: all instructions and commands below assume a Windows development environme
 1. Ensure you have Java, Maven, and Docker installed
 2. Ensure Docker is running
 3. Run `docker-compose up -d` to spin up an instance of a PostgreSQL container
-4. Run `$env:SPRING_PROFILES_ACTIVE = "dev"` to ensure spring boot loads `application-dev.properties`
+4. Run `$env:SPRING_PROFILES_ACTIVE = "dev"` (windows) or `export SPRING_PROFILES_ACTIVE=dev` (unix) to ensure spring boot loads `application-dev.properties`
 5. Run `mvn spring-boot:run` to start the Spring Boot REST API
 
 ## Environment Variables
